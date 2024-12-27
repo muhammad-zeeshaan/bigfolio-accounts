@@ -1,0 +1,44 @@
+[
+  {
+    "name": "John Doe",
+    "email": "john@example.com",
+    "phone": "1234567890",
+    "salaryStatus": "Send",
+    "basicSalary": 50000,
+    "allowance": 0,
+    "bonus": 300,
+    "overtime": 5,
+    "tax": 50,
+    "id": 2,
+    "holiday":2,
+    "designation": "Project Manager"
+  },
+  {
+    "id": 4,
+    "name": "John Doe23",
+    "email": "john@example.com",
+    "phone": "1234567890",
+    "salaryStatus": "Send",
+    "basicSalary": 5000,
+    "allowance": 200,
+    "bonus": 300,
+    "overtime": 100,
+    "tax": 50,
+    "designation": "Project Manager",
+    "holiday":3
+  },
+  {
+    "id": 5,
+    "name": "John Doe2345asasaassasaa",
+    "email": "john@example.com",
+    "phone": "1234567890",
+    "salaryStatus": "Send",
+    "basicSalary": 5000,
+    "allowance": 200,
+    "bonus": 300,
+    "overtime": 100,
+    "tax": 50,
+    "designation": "Team Lead",
+    "holiday":2
+  }
+]
