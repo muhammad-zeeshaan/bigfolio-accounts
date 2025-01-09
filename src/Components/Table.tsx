@@ -7,7 +7,7 @@ export interface Column<T> {
     dataIndex?: string | string[];
     title: string;
     key: string;
-    render?: (value: any, record: T, index: number) => ReactNode;
+    render?: (value: unknown, record: T, index: number) => ReactNode;
 }
 
 interface paginationConfigDTO {

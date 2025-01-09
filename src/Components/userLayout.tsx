@@ -11,7 +11,7 @@ const { Header, Content, Footer } = Layout;
 
 interface LayoutProps {
     children: ReactNode;
-    session?: any;
+    session?: unknown;
 }
 
 const AppLayout: React.FC<LayoutProps> = ({ children, session }) => {

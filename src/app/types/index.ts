@@ -17,6 +17,12 @@ export interface Employee extends BaseSalaryDetails {
 }
 
 export interface HistoryDTO extends BaseSalaryDetails {
+    _id: string;
+    user: string;
+    dispatchDate: Date;
+}
+
+export interface HistoryDTOWITHOUTID extends BaseSalaryDetails {
     _id?: string;
     user: string;
     dispatchDate: Date;
@@ -31,4 +37,22 @@ export interface ErrorResponse {
 export interface LoginFormData {
     email: string;
     password: string;
+}
+
+export interface AttendanceRecord {
+    userId: string;
+    userName?: string;
+    checkInTime: Date;
+}
+
+export interface AttendanceByDay {
+    [key: string]: AttendanceRecord[];
+}
+export interface SessionUser {
+    name: string;
+    email: string;
+    image: string;
+    accessToken: string;
+    id: string;
+    role: string;
 }

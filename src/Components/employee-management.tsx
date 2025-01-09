@@ -1,7 +1,7 @@
 "use client";
 import { useState } from "react";
 import { addEmployee, deleteEmployee, editEmployee } from '@/app/actions/employees';
-import Table from '@/Components/Table';
+import Table, { Column } from '@/Components/Table';
 import Modal from '@/Components/Modal';
 import EmployeeForm from '@/Components/EmployeeForm';
 import { Button, message } from 'antd';
@@ -9,7 +9,7 @@ import { Employee } from '@/app/types';
 import SalarySlip from '@/Components/Slip';
 import columns from '@/app/columns/employeeColumns';
 import { useRouter } from 'next/navigation';
-import { SendSalarySlip } from '@/app/api/send-pdf/route';
+import { SendSalarySlip } from '@/app/actions/sendPDF';
 
 export default function EmployeeManagement({ employees, totalRecords, limit, currentPage }: { employees: Employee[], totalRecords: number, limit: number, currentPage: number }) {
     const router = useRouter();
@@ -126,7 +126,7 @@ export default function EmployeeManagement({ employees, totalRecords, limit, cur
                 data={employees}
                 setSelectedRowKeys={setSelectedRowKeys}
                 selectedRowKeys={selectedRowKeys}
-                columns={columns(handleEdit, handleView, handleDelete)}
+                columns={columns(handleEdit, handleView, handleDelete) as Column<Employee>[]}
                 paginationConfig={{
                     total: totalRecords,
                     current: currentPage,

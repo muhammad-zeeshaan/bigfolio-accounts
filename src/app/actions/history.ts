@@ -8,13 +8,33 @@ interface FilterOptions {
     dispatchDate?: { month: number; year: number } | undefined;
 }
 
+interface Query {
+    salaryStatus?: string;
+    dispatchDate?: {
+        $gte: Date;
+        $lt: Date;
+    };
+}
+
+interface UserMatch {
+    email?: { $regex: string; $options: string };
+    name?: { $regex: string; $options: string };
+}
+
+interface FetchHistoryResponse {
+    data: HistoryDTO[];
+    currentPage: number;
+    limit: number;
+    totalRecords: number;
+}
+
 export async function fetchHistory(
     page: number,
     limit: number,
     filters: FilterOptions
-): Promise<{ data: HistoryDTO[]; currentPage: number; limit: number; totalRecords: number }> {
+): Promise<FetchHistoryResponse> {
     try {
-        const query: any = {};
+        const query: Query = {};
 
         if (filters.salaryStatus) {
             query.salaryStatus = filters.salaryStatus;
@@ -29,7 +49,7 @@ export async function fetchHistory(
         }
 
         const totalRecords = await History.countDocuments(query);
-        const userMatch: any = {};
+        const userMatch: UserMatch = {};
         if (filters.email) {
             userMatch.email = { $regex: filters.email, $options: 'i' };
         }
@@ -48,9 +68,9 @@ export async function fetchHistory(
 
         const filteredHistory = history.filter((item) => item.user !== null);
 
-        const data = filteredHistory.map((his: any) => ({
+        const data = filteredHistory.map((his: HistoryDTO) => ({
             ...his,
-            _id: his._id.toString(),
+            _id: his?._id?.toString(),
         }));
 
         return {

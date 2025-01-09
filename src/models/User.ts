@@ -28,7 +28,7 @@ const userSchema = new Schema<IUser>(
       required: true,
       lowercase: true,
       trim: true,
-      unique: true, // Ensure unique emails
+      unique: true,
     },
     phone: {
       type: String,
@@ -36,7 +36,7 @@ const userSchema = new Schema<IUser>(
     },
     password: {
       type: String,
-      required: true, // Password field added
+      required: true,
     },
     salaryStatus: {
       type: String,
@@ -78,23 +78,20 @@ const userSchema = new Schema<IUser>(
   }
 );
 
-// Hash password before saving
 userSchema.pre("save", async function (next) {
-  if (!this.isModified("password")) return next(); // Skip if password is not modified
+  if (!this.isModified("password")) return next();
 
   const salt = await bcrypt.genSalt(10);
   this.password = await bcrypt.hash(this.password, salt);
   next();
 });
 
-// Method to compare passwords
 userSchema.methods.comparePassword = async function (
   candidatePassword: string
 ): Promise<boolean> {
   return bcrypt.compare(candidatePassword, this.password);
 };
 
-// Export the model
 const User = models.User || model<IUser>("User", userSchema);
 
 export default User;

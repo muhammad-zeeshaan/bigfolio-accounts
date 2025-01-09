@@ -42,11 +42,12 @@ const login = async (
 
     return {
       ok: response.ok,
-      user: session.user as any,
+      user: session.user as LoginResponse['user'],
     };
-  } catch (err: any) {
+  } catch (err: unknown) {
+    const errorMessage = err instanceof Error ? err.message : "An unexpected error occurred.";
     return {
-      error: err.message || "An unexpected error occurred.",
+      error: errorMessage,
     };
   }
 };

@@ -1,8 +1,14 @@
+import { SessionUser } from './../app/types/index';
 import GoogleProvider from "next-auth/providers/google";
 import CredentialsProvider from "next-auth/providers/credentials";
-import { AuthOptions } from "next-auth";
+import { AuthOptions, User as NextAuthUser } from "next-auth";
 import User from "@/models/User";
-
+import jwt from "jsonwebtoken";
+const JWT_SECRET = process.env.JWT_SECRET as string;
+interface ExtendedUser extends NextAuthUser {
+  designation?: string;
+  token?: string;
+}
 const authOptions: AuthOptions = {
   providers: [
     GoogleProvider({
@@ -31,7 +37,8 @@ const authOptions: AuthOptions = {
         if (!passwordMatch) {
           throw new Error("Invalid password");
         }
-
+        const token = jwt.sign({ userId: user._id, email: user.email }, JWT_SECRET, { expiresIn: '1h' });
+        user.token = token;
         return user;
       },
     }),
@@ -39,7 +46,7 @@ const authOptions: AuthOptions = {
   secret: process.env.NEXTAUTH_SECRET as string,
   session: {
     strategy: "jwt",
-    maxAge: 30 * 24 * 60 * 60, // 30 days
+    maxAge: 30 * 24 * 60 * 60,
   },
   callbacks: {
     async signIn({ user, account }) {
@@ -67,19 +74,27 @@ const authOptions: AuthOptions = {
     },
     async jwt({ token, user, account }) {
       if (account) {
-        token.access_token = account.access_token;
+        const userCopy = user as ExtendedUser;
+        token.access_token = userCopy.token;
         token.userId = user?.id;
       }
       if (user) {
-        token.role = user.role;
+        const extendedUser = user as ExtendedUser;
+        token.role = extendedUser.designation;
       }
       return token;
     },
     async session({ session, token }) {
       if (session.user) {
-        session.user.accessToken = token.access_token;
-        session.user.id = token.userId;
-        session.user.role = token.role;
+        const sessionUser: SessionUser = {
+          name: session.user.name as string,
+          email: session.user.email as string,
+          image: session.user.image as string,
+          accessToken: token.access_token as string,
+          id: token.userId as string,
+          role: token.role as string,
+        };
+        session.user = sessionUser;
       }
       return session;
     },
