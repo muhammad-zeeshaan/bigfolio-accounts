@@ -5,6 +5,10 @@ export interface IAttendance extends Document {
     checkInTime: Date;
     checkOutTime?: Date;
     date: Date;
+    breaks?: {
+        breakStart: Date;
+        breakEnd: Date;
+    }[];
 }
 
 const AttendanceSchema: Schema = new mongoose.Schema({
@@ -12,6 +16,12 @@ const AttendanceSchema: Schema = new mongoose.Schema({
     checkInTime: { type: Date, required: true },
     checkOutTime: { type: Date },
     date: { type: Date, required: true },
+    breaks: [
+        {
+            breakStart: { type: Date },
+            breakEnd: { type: Date },
+        },
+    ],
 });
 
 const Attendance =

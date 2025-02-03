@@ -4,6 +4,7 @@ import { Form, Input, Button, Typography, Card, Alert, message } from "antd";
 import { UserOutlined, LockOutlined } from "@ant-design/icons";
 import login from '@/app/actions/login';
 import { LoginFormData } from '@/app/types';
+import Link from 'next/link';
 
 export default function LoginPage(): JSX.Element {
     const [form] = Form.useForm();
@@ -16,7 +17,11 @@ export default function LoginPage(): JSX.Element {
             const result = await login(values as LoginFormData);
             if (result.ok) {
                 message.success("Login successful");
-                window.location.href = "/";
+                if (result.user?.role === 'admin') {
+                    window.location.href = "/admin";
+                } else {
+                    window.location.href = "/calendar";
+                }
             }
             if (result?.error) {
                 setError(result.error);
@@ -119,6 +124,9 @@ export default function LoginPage(): JSX.Element {
                             </Button>
                         </Form.Item>
                     </Form>
+                    <Typography.Paragraph style={{ textAlign: "center", marginTop: 16 }}>
+                        Need an account? <Link href="/signup">Sign Up</Link>
+                    </Typography.Paragraph>
                 </Card>
             </div>
         </div>

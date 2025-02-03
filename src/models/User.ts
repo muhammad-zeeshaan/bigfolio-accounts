@@ -1,23 +1,7 @@
 import { Schema, model, models, Document } from "mongoose";
 import bcrypt from "bcrypt";
 
-interface IUser extends Document {
-  name: string;
-  email: string;
-  phone: string;
-  password: string;
-  salaryStatus: "Send" | "Pending";
-  basicSalary: number;
-  allowance: number;
-  bonus: number;
-  overtime: number;
-  tax: number;
-  holiday: number;
-  designation: string;
-  comparePassword(candidatePassword: string): Promise<boolean>;
-}
-
-const userSchema = new Schema<IUser>(
+const userSchema = new Schema(
   {
     name: {
       type: String,
@@ -30,22 +14,38 @@ const userSchema = new Schema<IUser>(
       trim: true,
       unique: true,
     },
-    phone: {
+    personalEmail: {
       type: String,
       required: true,
+      lowercase: true,
+      trim: true,
+      unique: true,
+    },
+    phone: {
+      type: String,
+    },
+    jobStatus: {
+      type: String,
+      enum: ["permanent", "underReview", "partTime", "newJoinee"]
+    },
+    joiningDate: {
+      type: Date,
+    },
+    leavingDate: {
+      type: Date,
+    },
+    address: {
+      type: String,
     },
     password: {
       type: String,
-      required: true,
     },
     salaryStatus: {
       type: String,
-      enum: ["Send", "Pending"],
-      required: true,
+      enum: ["Send", "Pending"]
     },
     basicSalary: {
       type: Number,
-      required: true,
     },
     allowance: {
       type: Number,
@@ -69,7 +69,6 @@ const userSchema = new Schema<IUser>(
     },
     designation: {
       type: String,
-      required: true,
     },
   },
   {
@@ -82,7 +81,7 @@ userSchema.pre("save", async function (next) {
   if (!this.isModified("password")) return next();
 
   const salt = await bcrypt.genSalt(10);
-  this.password = await bcrypt.hash(this.password, salt);
+  this.password = await bcrypt.hash(this.password!, salt);
   next();
 });
 
@@ -92,6 +91,6 @@ userSchema.methods.comparePassword = async function (
   return bcrypt.compare(candidatePassword, this.password);
 };
 
-const User = models.User || model<IUser>("User", userSchema);
+const User = models.User || model("User", userSchema);
 
 export default User;

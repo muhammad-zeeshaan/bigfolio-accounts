@@ -5,37 +5,37 @@ import { Button, Popconfirm } from "antd";
 const columns = (
     handleEdit: (employee: Employee) => void,
     handleView: (employee: Employee) => void,
-    handleDelete: (id: string) => void
+    handleDelete: (id: string) => void,
 ) => [
         {
             title: "ID",
-            dataIndex: "id",
-            key: "id", // Added key
+        dataIndex: "_id",
+        key: "_id",
             render: (text: string) => text,
         },
         {
             title: "Name",
             dataIndex: "name",
-            key: "name", // Added key
+            key: "name",
             render: (text: string) => text,
         },
         {
             title: "Email",
             dataIndex: "email",
-            key: "email", // Added key
+            key: "email",
             render: (text: string) => text,
         },
         {
             title: "Phone",
             dataIndex: "phone",
-            key: "phone", // Added key
+            key: "phone",
             render: (text: string) => text,
         },
         {
             title: "Actions",
             dataIndex: "actions",
-            key: "actions", // Added key
-            render: (text: string, row: Employee) => (
+            key: "actions",
+            render: (_text: string, row: Employee) => (
                 <div className="flex gap-4">
                     <Button type="primary" onClick={() => handleEdit(row)}>
                         Edit
@@ -45,7 +45,7 @@ const columns = (
                     </Button>
                     <Popconfirm
                         title="Are you sure you want to delete this employee?"
-                        onConfirm={() => handleDelete(row._id)} // Ensure `row.id` is used for consistency with `dataIndex`
+                        onConfirm={() => handleDelete(row._id)}
                         okText="Yes"
                         cancelText="No"
                     >

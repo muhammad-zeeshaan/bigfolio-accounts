@@ -7,6 +7,7 @@ import transporter from '@/utils/mailer';
 import SlipTemplate from '@/Components/SlipTemplate';
 import React from 'react';
 import History from '@/models/History';
+import { SendSalarySlipRequest } from '../validations/userSchema';
 
 async function generatePDF(html: string): Promise<Buffer> {
     const browser = await puppeteer.launch({
@@ -18,10 +19,6 @@ async function generatePDF(html: string): Promise<Buffer> {
     const pdfBuffer = await page.pdf({ format: 'A4', printBackground: true });
     await browser.close();
     return Buffer.from(pdfBuffer);
-}
-
-interface SendSalarySlipRequest {
-    employeeIds: React.Key[];
 }
 
 interface MailOptions {
@@ -45,7 +42,7 @@ export async function SendSalarySlip(req: SendSalarySlipRequest): Promise<{ mess
         };
     }
 
-    const objectIds = employeeIds.map((id: React.Key) => new ObjectId(id as string));
+    const objectIds = employeeIds.map((id: unknown) => new ObjectId(id as string));
     const query = { _id: { $in: objectIds } };
     const employees = await User.find(query).lean<Employee[]>();
 
@@ -70,7 +67,7 @@ export async function SendSalarySlip(req: SendSalarySlipRequest): Promise<{ mess
 
             const history: HistoryDTOWITHOUTID = {
                 ...employeeDetails,
-                user: employeeDetails?._id,
+                user: employeeDetails?._id ?? '',
                 dispatchDate: new Date(),
             };
             delete history._id;

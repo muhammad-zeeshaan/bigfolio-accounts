@@ -2,42 +2,41 @@
 import React, { useState, useEffect } from 'react';
 import { Layout, Menu, Breadcrumb, Avatar, Dropdown, Space } from 'antd';
 import { ReactNode } from 'react';
-import { ConfigProvider, theme } from 'antd';
-import { redirect, useRouter } from 'next/navigation';
+import { ConfigProvider } from 'antd';
+import { redirect, usePathname, useRouter } from 'next/navigation';
 import { signOut } from 'next-auth/react';
 import { UserOutlined } from '@ant-design/icons';
-import { SessionDTO } from '@/app/types';
+import { SessionUser } from '@/app/types';
 
 const { Header, Content, Footer } = Layout;
 
 interface LayoutProps {
     children: ReactNode;
-    session?: SessionDTO;
+    session?: { user?: SessionUser };
 }
 
-const UserLayout: React.FC<LayoutProps> = ({ children, session }) => {
+const AdminLayout: React.FC<LayoutProps> = ({ children, session }) => {
     if (!session) {
         redirect('/signin');
     }
-    const [isDarkMode, setIsDarkMode] = useState(false);
+    const user = session.user;
+    if (user?.role !== "admin" || !user) {
+        redirect("/signin");
+    }
+
+    const pathname = usePathname(); // Get current path
     const router = useRouter();
 
-    useEffect(() => {
-        setIsDarkMode(false)
-        // const savedTheme = localStorage.getItem('theme');
-        // if (savedTheme) {
-        //     const isDark = savedTheme === 'dark'
-        //     setIsDarkMode(isDark);
-        // } else {
-        //     const prefersDarkScheme = window.matchMedia('(prefers-color-scheme: dark)').matches;
-        //     setIsDarkMode(prefersDarkScheme);
-        // }
-    }, []);
+    const [isDarkMode, setIsDarkMode] = useState(false);
 
-    // const toggleTheme = () => {
-    //     setIsDarkMode(prev => !prev);
-    //     localStorage.setItem('theme', isDarkMode ? 'light' : 'dark');
-    // };
+    useEffect(() => {
+        const savedTheme = localStorage.getItem('theme');
+        if (savedTheme) {
+            setIsDarkMode(savedTheme === 'dark');
+        } else {
+            setIsDarkMode(window.matchMedia('(prefers-color-scheme: dark)').matches);
+        }
+    }, []);
 
     const handleLogout = () => {
         signOut();
@@ -48,15 +47,15 @@ const UserLayout: React.FC<LayoutProps> = ({ children, session }) => {
     };
 
     const menuItems = [
-        // { key: 'home', label: 'Home', href: '/' },
-        { key: 'calendar', label: 'Calendar', href: '/calendar' },
-        { key: 'history', label: 'History', href: '/history' },
-        { key: 'app', label: 'App', href: '/' },
+        { key: 'admin', label: 'Home', href: '/admin' },
+        { key: 'calendar', label: 'Calendar', href: '/admin/calendar' },
+        { key: 'history', label: 'History', href: '/admin/history' },
+        { key: 'app', label: 'App', href: '/admin/app' },
     ];
 
     const breadcrumbItems = [
-        // { key: 'home', title: 'Home', href: '/' },
-        { key: 'calendar', title: 'Calendar', href: '/calendar' },
+        { key: 'home', title: 'Home', href: '/admin' },
+        { key: 'calendar', title: 'Calendar', href: '/admin/calendar' },
         { key: 'app', title: 'App', href: '/' },
     ];
 
@@ -73,18 +72,14 @@ const UserLayout: React.FC<LayoutProps> = ({ children, session }) => {
     );
 
     return (
-        <ConfigProvider
-            // theme={{
-            //     algorithm: false ? theme.darkAlgorithm : theme.defaultAlgorithm,
-            // }}
-        >
+        <ConfigProvider>
             <Layout>
                 <Header style={{ position: 'fixed', width: '100%', zIndex: 99 }}>
                     <div style={{ display: 'flex', justifyContent: 'space-between' }}>
                         <Menu
-                            theme={'dark'}
+                            theme="dark"
                             mode="horizontal"
-                            defaultSelectedKeys={['home']}
+                            selectedKeys={[pathname.split('/')[2] || 'admin']}
                             style={{ lineHeight: '64px' }}
                             items={menuItems}
                             onClick={(data) => {
@@ -115,4 +110,4 @@ const UserLayout: React.FC<LayoutProps> = ({ children, session }) => {
     );
 };
 
-export default UserLayout;
+export default AdminLayout;

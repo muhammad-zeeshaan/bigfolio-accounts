@@ -1,6 +1,5 @@
 "use client";
 import { useState } from "react";
-import { addEmployee, deleteEmployee, editEmployee } from '@/app/actions/employees';
 import Table, { Column } from '@/Components/Table';
 import Modal from '@/Components/Modal';
 import EmployeeForm from '@/Components/EmployeeForm';
@@ -9,29 +8,62 @@ import { Employee } from '@/app/types';
 import SalarySlip from '@/Components/Slip';
 import columns from '@/app/columns/employeeColumns';
 import { useRouter } from 'next/navigation';
-import { SendSalarySlip } from '@/app/actions/sendPDF';
+import { trpc } from '@/utils/trpcClient';
 
 export default function EmployeeManagement({ employees, totalRecords, limit, currentPage }: { employees: Employee[], totalRecords: number, limit: number, currentPage: number }) {
     const router = useRouter();
     const [singleEmployee, setSingleEmployee] = useState<Employee | null>(null);
     const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
+    const [isAttendanceModalOpen, setIsAttendanceModalOpen] = useState<boolean>(false);
     const [isSalaryModalOpen, setSalaryModalOpen] = useState<boolean>(false);
     const [selectedRowKeys, setSelectedRowKeys] = useState<React.Key[]>([]);
-    const [isLoading, setIsLoading] = useState<{ add: boolean, edit: boolean, delete: boolean, sendSlips: boolean }>({ add: false, edit: false, delete: false, sendSlips: false });
 
-    const handleAddEmployee = async (newEmployee: Employee) => {
-        setIsLoading(prev => ({ ...prev, add: true }));
-        try {
-            await addEmployee(newEmployee);
+    // tRPC Mutations
+    const addEmployeeMutation = trpc.employee.addEmployee.useMutation({
+        onSuccess: () => {
             message.success('Employee added successfully.');
             setIsModalOpen(false);
             router.refresh();
-        } catch (error) {
+        },
+        onError: () => {
             message.error('Failed to add employee.');
-            console.error(error)
-        } finally {
-            setIsLoading(prev => ({ ...prev, add: false }));
-        }
+        },
+    });
+
+    const editEmployeeMutation = trpc.employee.editEmployee.useMutation({
+        onSuccess: () => {
+            message.success('Employee updated successfully.');
+            setIsModalOpen(false);
+            setSingleEmployee(null);
+            router.refresh();
+        },
+        onError: () => {
+            message.error('Failed to update employee.');
+        },
+    });
+
+    const deleteEmployeeMutation = trpc.employee.deleteEmployee.useMutation({
+        onSuccess: () => {
+            message.success('Employee deleted successfully.');
+            router.refresh();
+        },
+        onError: () => {
+            message.error('Failed to delete employee.');
+        },
+    });
+
+    const sendSalarySlipMutation = trpc.employee.sendSalarySlip.useMutation({
+        onSuccess: () => {
+            message.success('Salary slips sent successfully.');
+            setSelectedRowKeys([]);
+        },
+        onError: () => {
+            message.error('Failed to send salary slips.');
+        },
+    });
+
+    const handleAddEmployee = async (newEmployee: Employee) => {
+        await addEmployeeMutation.mutateAsync(newEmployee);
     };
 
     const handleEdit = (emp: Employee) => {
@@ -44,57 +76,26 @@ export default function EmployeeManagement({ employees, totalRecords, limit, cur
             console.error('Employee ID not found!');
             return;
         }
-
-        setIsLoading(prev => ({ ...prev, edit: true }));
-        try {
-            await editEmployee({ ...updatedEmployee, _id: singleEmployee._id });
-            message.success('Employee updated successfully.');
-            router.refresh();
-            setIsModalOpen(false);
-            setSingleEmployee(null);
-        } catch (error) {
-            message.error('Failed to update employee.');
-            console.log(error)
-        } finally {
-            setIsLoading(prev => ({ ...prev, edit: false }));
-        }
+        await editEmployeeMutation.mutateAsync({ ...updatedEmployee, _id: singleEmployee._id });
     };
 
     const handleView = (emp: Employee) => {
         setSingleEmployee(emp);
         setSalaryModalOpen(true);
     };
+    const handleAttendence = (emp: Employee) => {
+        setSingleEmployee(emp);
+        setIsAttendanceModalOpen(!isAttendanceModalOpen);
+    }
 
     const handleDelete = async (id: string | undefined | null) => {
         if (!id) return;
-
-        setIsLoading(prev => ({ ...prev, delete: true }));
-        try {
-            await deleteEmployee(id);
-            message.success('Employee deleted successfully.');
-            router.refresh();
-        } catch (error) {
-            message.error('Failed to delete employee.');
-            console.log(error)
-        } finally {
-            setIsLoading(prev => ({ ...prev, delete: false }));
-        }
+        await deleteEmployeeMutation.mutateAsync({ id });
     };
 
     const sendSlips = async () => {
         if (!selectedRowKeys.length) return;
-
-        setIsLoading(prev => ({ ...prev, sendSlips: true }));
-        try {
-            await SendSalarySlip({ employeeIds: selectedRowKeys });
-            message.success('Salary slips sent successfully.');
-            setSelectedRowKeys([]);
-        } catch (error) {
-            message.error('Failed to send salary slips.');
-            console.log(error)
-        } finally {
-            setIsLoading(prev => ({ ...prev, sendSlips: false }));
-        }
+        await sendSalarySlipMutation.mutateAsync({ employeeIds: selectedRowKeys });
     };
 
     return (
@@ -107,7 +108,7 @@ export default function EmployeeManagement({ employees, totalRecords, limit, cur
                         setIsModalOpen(true);
                         setSingleEmployee(null);
                     }}
-                    loading={isLoading.add}
+                    loading={addEmployeeMutation.isLoading}
                 >
                     Add Employee
                 </Button>
@@ -115,7 +116,7 @@ export default function EmployeeManagement({ employees, totalRecords, limit, cur
                     <Button
                         type="primary"
                         onClick={sendSlips}
-                        loading={isLoading.sendSlips}
+                        loading={sendSalarySlipMutation.isLoading}
                     >
                         Send Slips
                     </Button>
@@ -142,11 +143,10 @@ export default function EmployeeManagement({ employees, totalRecords, limit, cur
                     <EmployeeForm
                         onSubmit={singleEmployee ? handleEditEmployee : handleAddEmployee}
                         employee={singleEmployee ?? undefined}
-                        loading={isLoading.add || isLoading.edit}
+                        loading={addEmployeeMutation.isLoading || editEmployeeMutation.isLoading}
                     />
                 </>
             </Modal>
-
             <Modal isOpen={isSalaryModalOpen} onClose={() => setSalaryModalOpen(false)}>
                 {singleEmployee && <SalarySlip employeedetail={singleEmployee} />}
             </Modal>
