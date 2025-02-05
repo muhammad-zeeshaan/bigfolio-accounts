@@ -4,7 +4,8 @@ import {
   checkOut,
   startBreak,
   endBreak,
-  getMonthlyAttendance
+  getMonthlyAttendance,
+  updateAttendance
 } from "./controller";
 import {
   getMonthlyAttendanceSchema,
@@ -12,6 +13,7 @@ import {
   checkOutSchema,
   startBreakSchema,
   endBreakSchema,
+  updateAttendanceSchema,
 } from '@/app/validations/attendanceSchema';
 
 const attendanceRouter = router({
@@ -34,6 +36,11 @@ const attendanceRouter = router({
   getMonthlyAttendance: protectedProcedure
     .input(getMonthlyAttendanceSchema)
     .query(({ input }) => getMonthlyAttendance(input.year, input.month)),
+  updateAttendance: protectedProcedure
+    .input(updateAttendanceSchema)
+    .mutation(async ({ input }) => {
+      return updateAttendance(input);
+    }),
 });
 
 export default attendanceRouter;

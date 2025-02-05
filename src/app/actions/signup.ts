@@ -2,7 +2,6 @@
 import User from '@/models/User';
 
 export const signUp = async (formData: any): Promise<{ success: boolean, message: string, user?: any }> => {
-    console.log(formData?.email);
 
     const userData = {
         email: formData?.email,

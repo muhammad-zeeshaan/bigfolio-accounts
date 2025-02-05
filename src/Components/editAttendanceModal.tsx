@@ -1,46 +1,57 @@
-import React, { useState, useEffect } from 'react';
-import { Modal, Form, Input, DatePicker, Button, InputNumber, Row, Col, Space } from 'antd';
-import moment from 'moment';
-import { IAttendance } from '@/models/Attendance';
-import { Employee } from '@/app/types';
+import React, { useEffect } from 'react';
+import { Modal, Form, DatePicker, Button, Row, Col, Typography, Space, Tooltip, message } from 'antd';
+import dayjs from "dayjs";
+import { PlusOutlined, DeleteOutlined, SaveOutlined } from '@ant-design/icons';
+import { AttendanceRecord } from '@/app/types';
+import { trpc } from '@/utils/trpcClient';
+import { useRouter } from 'next/navigation';
+import { UpdateAttendanceType } from '@/app/validations/attendanceSchema';
 
+const { Title } = Typography;
 interface EditAttendanceModalProps {
     visible: boolean;
     onClose: () => void;
-    attendance: Employee | null;
-    onSubmit: (data: Employee) => void;
+    attendance: AttendanceRecord | null;
 }
 
-const EditAttendanceModal: React.FC<EditAttendanceModalProps> = ({ visible, onClose, attendance, onSubmit }) => {
+const EditAttendanceModal: React.FC<EditAttendanceModalProps> = ({ visible, onClose, attendance }) => {
     const [form] = Form.useForm();
-
+    const router = useRouter()
+    const updateAttendance = trpc.attendance.updateAttendance.useMutation({
+        onSuccess: (data) => {
+            data?.success ? message.success(data.message) : message.warning(data.message);
+            onClose();
+            router.refresh()
+        },
+        onError: (error) => {
+            message.error(error.message || "Failed to update attendance");
+        },
+    });
+    const initialValues = () => {
+        return attendance?.breaks && attendance.breaks.length > 0
+            ? attendance.breaks.map(b => ({
+                breakStart: b.breakStart ? dayjs(b.breakStart) : null,
+                breakEnd: b.breakEnd ? dayjs(b.breakEnd) : null,
+            }))
+            : [];
+    }
     useEffect(() => {
         if (attendance) {
-            form.setFieldsValue({
-                checkInTime: moment(attendance.checkInTime),
-                checkOutTime: attendance.checkOutTime ? moment(attendance.checkOutTime) : null,
-                breaks: attendance.breaks?.map(b => ({
-                    breakStart: b.breakStart ? moment(b.breakStart) : null,
-                    breakEnd: b.breakEnd ? moment(b.breakEnd) : null,
-                })),
-            });
+            const formattedAttendance = {
+                checkInTime: attendance.checkInTime ? dayjs(attendance.checkInTime) : null,
+                checkOutTime: attendance.checkOutTime ? dayjs(attendance.checkOutTime) : null,
+                breaks: initialValues(),
+            };
+            form.setFieldsValue(formattedAttendance);
         }
     }, [attendance, form]);
 
-    const handleSubmit = (values: any) => {
+    const handleSubmit = (values: UpdateAttendanceType) => {
         if (attendance) {
-            const updatedAttendance = {
-                ...attendance,
-                checkInTime: values.checkInTime,
-                checkOutTime: values.checkOutTime,
-                breaks: values.breaks,
-            };
-            // onSubmit(updatedAttendance);
+            const updatedAttendance = { ...values, _id: attendance._id, userId: attendance.userId }
+            updateAttendance.mutate(updatedAttendance);
         }
-        console.log(values);
-        onClose();
     };
-
     return (
         <Modal
             open={visible}
@@ -50,6 +61,8 @@ const EditAttendanceModal: React.FC<EditAttendanceModalProps> = ({ visible, onCl
             width={600}
         >
             <Form form={form} onFinish={handleSubmit} layout="vertical">
+                <Title level={4} style={{ marginBottom: '24px' }}>Attendance Details</Title>
+
                 <Row gutter={16}>
                     <Col span={12}>
                         <Form.Item
@@ -61,6 +74,7 @@ const EditAttendanceModal: React.FC<EditAttendanceModalProps> = ({ visible, onCl
                                 style={{ width: '100%' }}
                                 showTime
                                 format="YYYY-MM-DD HH:mm"
+                                placeholder="Select check-in time"
                             />
                         </Form.Item>
                     </Col>
@@ -74,72 +88,61 @@ const EditAttendanceModal: React.FC<EditAttendanceModalProps> = ({ visible, onCl
                                 style={{ width: '100%' }}
                                 showTime
                                 format="YYYY-MM-DD HH:mm"
+                                placeholder="Select check-out time"
                             />
                         </Form.Item>
                     </Col>
                 </Row>
 
+                <Title level={5} style={{ marginBottom: '16px' }}>Breaks</Title>
                 <Form.List
                     name="breaks"
-                    initialValue={attendance?.breaks || []}
-                    rules={[
-                        {
-                            validator: async (_, breaks) => {
-                                if (!breaks || breaks.length < 1) {
-                                    return Promise.reject(new Error('At least one break should be added'));
-                                }
-                            },
-                        },
-                    ]}
+                    initialValue={initialValues()}
                 >
                     {(fields, { add, remove }) => (
                         <>
-                            {fields.map(({ key, fieldKey, name, fieldKey: _fieldKey }) => (
-                                <Row gutter={16} key={key}>
-                                    <Col span={10}>
-                                        <Form.Item
-                                            label="Break Start"
-                                            name={[name, 'breakStart']}
-                                            fieldKey={[fieldKey, 'breakStart']}
-                                            rules={[{ required: true, message: 'Please select the break start time!' }]}
-                                        >
-                                            <DatePicker
-                                                style={{ width: '100%' }}
-                                                showTime
-                                                format="YYYY-MM-DD HH:mm"
-                                            />
-                                        </Form.Item>
-                                    </Col>
-                                    <Col span={10}>
-                                        <Form.Item
-                                            label="Break End"
-                                            name={[name, 'breakEnd']}
-                                            fieldKey={[fieldKey, 'breakEnd']}
-                                            rules={[{ required: true, message: 'Please select the break end time!' }]}
-                                        >
-                                            <DatePicker
-                                                style={{ width: '100%' }}
-                                                showTime
-                                                format="YYYY-MM-DD HH:mm"
-                                            />
-                                        </Form.Item>
-                                    </Col>
-                                    <Col span={2}>
+                            {fields.map(({ key, name, fieldKey }) => (
+                                <Space key={key} className='flex !items-center' style={{ display: 'flex', marginBottom: 8 }} align="baseline">
+                                    <Form.Item
+                                        label="Break Start"
+                                        name={[name, 'breakStart']}
+                                        fieldKey={[fieldKey ?? 0, 'breakStart']}
+                                    >
+                                        <DatePicker
+                                            style={{ width: '100%' }}
+                                            showTime
+                                            format="YYYY-MM-DD HH:mm"
+                                            placeholder="Select break start time"
+                                        />
+                                    </Form.Item>
+                                    <Form.Item
+                                        label="Break End"
+                                        name={[name, 'breakEnd']}
+                                        fieldKey={[fieldKey ?? 0, 'breakEnd']}
+                                    >
+                                        <DatePicker
+                                            style={{ width: '100%' }}
+                                            showTime
+                                            format="YYYY-MM-DD HH:mm"
+                                            placeholder="Select break end time"
+                                        />
+                                    </Form.Item>
+                                    <Tooltip title="Remove Break">
                                         <Button
-                                            type="danger"
+                                            type="text"
+                                            danger
+                                            icon={<DeleteOutlined />}
                                             onClick={() => remove(name)}
-                                            style={{ marginTop: '30px' }}
-                                        >
-                                            Remove
-                                        </Button>
-                                    </Col>
-                                </Row>
+                                        />
+                                    </Tooltip>
+                                </Space>
                             ))}
                             <Form.Item>
                                 <Button
                                     type="dashed"
                                     onClick={() => add()}
                                     block
+                                    icon={<PlusOutlined />}
                                 >
                                     Add Break
                                 </Button>
@@ -149,7 +152,7 @@ const EditAttendanceModal: React.FC<EditAttendanceModalProps> = ({ visible, onCl
                 </Form.List>
 
                 <Form.Item>
-                    <Button type="primary" htmlType="submit" block>
+                    <Button type="primary" loading={updateAttendance.isLoading} htmlType="submit" block icon={<SaveOutlined />}>
                         Save Changes
                     </Button>
                 </Form.Item>

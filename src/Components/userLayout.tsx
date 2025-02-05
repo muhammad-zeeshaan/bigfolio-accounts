@@ -3,10 +3,11 @@ import React, { useState, useEffect } from 'react';
 import { Layout, Menu, Breadcrumb, Avatar, Dropdown, Space } from 'antd';
 import { ReactNode } from 'react';
 import { ConfigProvider, theme } from 'antd';
-import { redirect, useRouter } from 'next/navigation';
+import { redirect, usePathname, useRouter } from 'next/navigation';
 import { signOut } from 'next-auth/react';
 import { UserOutlined } from '@ant-design/icons';
 import { SessionDTO } from '@/app/types';
+import Link from 'next/link';
 
 const { Header, Content, Footer } = Layout;
 
@@ -21,23 +22,11 @@ const UserLayout: React.FC<LayoutProps> = ({ children, session }) => {
     }
     const [isDarkMode, setIsDarkMode] = useState(false);
     const router = useRouter();
+    const pathname = usePathname();
 
     useEffect(() => {
-        setIsDarkMode(false)
-        // const savedTheme = localStorage.getItem('theme');
-        // if (savedTheme) {
-        //     const isDark = savedTheme === 'dark'
-        //     setIsDarkMode(isDark);
-        // } else {
-        //     const prefersDarkScheme = window.matchMedia('(prefers-color-scheme: dark)').matches;
-        //     setIsDarkMode(prefersDarkScheme);
-        // }
+        setIsDarkMode(false);
     }, []);
-
-    // const toggleTheme = () => {
-    //     setIsDarkMode(prev => !prev);
-    //     localStorage.setItem('theme', isDarkMode ? 'light' : 'dark');
-    // };
 
     const handleLogout = () => {
         signOut();
@@ -48,19 +37,16 @@ const UserLayout: React.FC<LayoutProps> = ({ children, session }) => {
     };
 
     const menuItems = [
-        // { key: 'home', label: 'Home', href: '/' },
         { key: 'calendar', label: 'Calendar', href: '/calendar' },
         { key: 'history', label: 'History', href: '/history' },
-        { key: 'app', label: 'App', href: '/' },
+        { key: 'app', label: 'App', href: '/calendar' },
     ];
 
     const breadcrumbItems = [
-        // { key: 'home', title: 'Home', href: '/' },
         { key: 'calendar', title: 'Calendar', href: '/calendar' },
         { key: 'app', title: 'App', href: '/' },
     ];
 
-    // Dropdown menu for user actions (Logout, My Account)
     const userMenu = (
         <Menu>
             <Menu.Item key="account" onClick={handleAccount}>
@@ -72,26 +58,31 @@ const UserLayout: React.FC<LayoutProps> = ({ children, session }) => {
         </Menu>
     );
 
+    // Determine the active menu item based on the current pathname
+    const getActiveMenuKey = () => {
+        const pathSegments = pathname.split('/');
+        return menuItems.find(item => `/${item.key}` === pathname)
+            ? pathname.split('/')[1]
+            : 'app';
+    };
+
     return (
-        <ConfigProvider
-            // theme={{
-            //     algorithm: false ? theme.darkAlgorithm : theme.defaultAlgorithm,
-            // }}
-        >
+        <ConfigProvider>
             <Layout>
                 <Header style={{ position: 'fixed', width: '100%', zIndex: 99 }}>
                     <div style={{ display: 'flex', justifyContent: 'space-between' }}>
                         <Menu
-                            theme={'dark'}
+                            theme="dark"
                             mode="horizontal"
-                            defaultSelectedKeys={['home']}
+                            selectedKeys={[getActiveMenuKey()]}
                             style={{ lineHeight: '64px' }}
-                            items={menuItems}
-                            onClick={(data) => {
-                                const url = menuItems.find((item) => item.key === data.key)?.href ?? '';
-                                router.push(url);
-                            }}
-                        />
+                        >
+                            {menuItems.map((item) => (
+                                <Menu.Item key={item.key}>
+                                    <Link href={item.href}>{item.label}</Link>
+                                </Menu.Item>
+                            ))}
+                        </Menu>
                         <Dropdown overlay={userMenu} trigger={['click']}>
                             <a onClick={(e) => e.preventDefault()}>
                                 <Space>

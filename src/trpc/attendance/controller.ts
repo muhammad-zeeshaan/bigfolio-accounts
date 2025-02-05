@@ -1,9 +1,9 @@
 "use server"
 import Attendance from '@/models/Attendance';
 import mongoose from 'mongoose';
-import { AttendanceByDay, SessionUser } from '../../app/types';
+import { AttendanceByDay, breakDTO, SessionUser } from '../../app/types';
 import loadSession from '@/utils/session';
-import { CheckInType, CheckOutType, EndBreakType, StartBreakType } from '@/app/validations/attendanceSchema';
+import { CheckInType, CheckOutType, EndBreakType, StartBreakType, UpdateAttendanceType } from '@/app/validations/attendanceSchema';
 
 export const checkIn = async (input: CheckInType) => {
   const { userId } = input;
@@ -74,6 +74,7 @@ export const getMonthlyAttendance = async (year: number, month: number): Promise
         attendanceByDay[dateKey] = [];
       }
       attendanceByDay[dateKey].push({
+        _id: String(record._id),
         userId: record.userId._id as string,
         userName: record.userId.name,
         checkInTime: record.checkInTime,
@@ -115,7 +116,7 @@ export const checkOut = async (input: CheckOutType) => {
 
     // Check if user is on a break (i.e. if there is an ongoing break)
     const ongoingBreak = existingAttendance.breaks?.some(
-      (breakEntry: any) => breakEntry.breakStart && !breakEntry.breakEnd
+      (breakEntry: breakDTO) => breakEntry.breakStart && !breakEntry.breakEnd
     );
 
     if (ongoingBreak) {
@@ -194,5 +195,30 @@ export const endBreak = async (input: EndBreakType) => {
   } catch (error) {
     console.error('Error ending break:', error);
     return { message: 'Error ending break', attendance: null };
+  }
+};
+
+export const updateAttendance = async (input: UpdateAttendanceType) => {
+  try {
+    const { _id, checkInTime, checkOutTime, breaks } = input;
+
+    if (_id && !mongoose.Types.ObjectId.isValid(_id)) {
+      throw new Error("Invalid Attendance ID");
+    }
+
+    const updatedAttendance = await Attendance.findByIdAndUpdate(
+      _id,
+      { checkInTime, checkOutTime, breaks },
+      { new: true }
+    );
+
+    if (!updatedAttendance) {
+      throw new Error("Attendance record not found");
+    }
+
+    return { success: true, message: "Attendance updated successfully", data: updatedAttendance };
+  } catch (error) {
+    console.error('Error updating attendance:', error);
+    return { success: false, message: "Error updating attendance" };
   }
 };

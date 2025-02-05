@@ -72,6 +72,58 @@ export const getMonthlyAttendance = async (year: number, month: number): Promise
                 attendanceByDay[dateKey] = [];
             }
             attendanceByDay[dateKey].push({
+                _id: String(record._id),
+                userId: record.userId._id as string,
+                userName: record.userId.name,
+                checkInTime: record.checkInTime,
+                checkOutTime: record.checkOutTime,
+                breaks: record.breaks || [],
+            });
+        });
+
+        return attendanceByDay;
+    } catch (error) {
+        console.error('Error fetching attendance records:', error);
+        return {}
+    }
+};
+export const getMonthlyUserAttendance = async (year: number, month: number, userId: string): Promise<AttendanceByDay> => {
+    const session = await loadSession();
+    if (!session) {
+        throw new Error('You must be logged in to view attendance records');
+    }
+
+    try {
+        const startDate = new Date(year, month - 1, 1);
+        const endDate = new Date(year, month - 1, new Date(year, month, 0).getDate(), 23, 59, 59, 999);
+
+        let query: { date: { $gte: Date; $lte: Date; }; userId?: mongoose.Types.ObjectId } = {
+            date: {
+                $gte: startDate,
+                $lte: endDate,
+            },
+        };
+        const currentUser = session.user as SessionUser;
+        query.userId = new mongoose.Types.ObjectId(userId);
+
+        const attendanceRecords = await Attendance.find(query)
+            .populate({
+                path: 'userId',
+                model: 'User',
+                select: 'name',
+            })
+            .lean();
+
+        const attendanceByDay: AttendanceByDay = {};
+
+        attendanceRecords.forEach((record) => {
+            const day = new Date(record.date);
+            const dateKey = `${day.getDate().toString().padStart(2, '0')}-${(day.getMonth() + 1).toString().padStart(2, '0')}-${day.getFullYear()}`;
+            if (!attendanceByDay[dateKey]) {
+                attendanceByDay[dateKey] = [];
+            }
+            attendanceByDay[dateKey].push({
+                _id: String(record._id),
                 userId: record.userId._id as string,
                 userName: record.userId.name,
                 checkInTime: record.checkInTime,

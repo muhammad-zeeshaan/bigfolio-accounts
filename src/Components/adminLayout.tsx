@@ -7,6 +7,7 @@ import { redirect, usePathname, useRouter } from 'next/navigation';
 import { signOut } from 'next-auth/react';
 import { UserOutlined } from '@ant-design/icons';
 import { SessionUser } from '@/app/types';
+import Link from 'next/link';
 
 const { Header, Content, Footer } = Layout;
 
@@ -23,10 +24,8 @@ const AdminLayout: React.FC<LayoutProps> = ({ children, session }) => {
     if (user?.role !== "admin" || !user) {
         redirect("/signin");
     }
-
-    const pathname = usePathname(); // Get current path
+    const pathname = usePathname();
     const router = useRouter();
-
     const [isDarkMode, setIsDarkMode] = useState(false);
 
     useEffect(() => {
@@ -81,12 +80,13 @@ const AdminLayout: React.FC<LayoutProps> = ({ children, session }) => {
                             mode="horizontal"
                             selectedKeys={[pathname.split('/')[2] || 'admin']}
                             style={{ lineHeight: '64px' }}
-                            items={menuItems}
-                            onClick={(data) => {
-                                const url = menuItems.find((item) => item.key === data.key)?.href ?? '';
-                                router.push(url);
-                            }}
-                        />
+                        >
+                            {menuItems.map((item) => (
+                                <Menu.Item key={item.key}>
+                                    <Link href={item.href}>{item.label}</Link>
+                                </Menu.Item>
+                            ))}
+                        </Menu>
                         <Dropdown overlay={userMenu} trigger={['click']}>
                             <a onClick={(e) => e.preventDefault()}>
                                 <Space>

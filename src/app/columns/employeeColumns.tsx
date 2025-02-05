@@ -1,59 +1,84 @@
 import React from "react";
 import { Employee } from "../types";
-import { Button, Popconfirm } from "antd";
+import { Button, Popconfirm, Space, Tooltip } from "antd";
+import {
+    EditOutlined,
+    EyeOutlined,
+    UserOutlined,
+    DeleteOutlined,
+} from "@ant-design/icons";
+import Link from "next/link";
 
 const columns = (
     handleEdit: (employee: Employee) => void,
     handleView: (employee: Employee) => void,
-    handleDelete: (id: string) => void,
+    handleDelete: (id: string) => void
 ) => [
         {
             title: "ID",
         dataIndex: "_id",
         key: "_id",
-            render: (text: string) => text,
+        render: (text: string) => <span className="font-mono">{text}</span>,
         },
         {
             title: "Name",
             dataIndex: "name",
             key: "name",
-            render: (text: string) => text,
+            render: (text: string) => <span className="font-medium">{text}</span>,
         },
         {
             title: "Email",
             dataIndex: "email",
             key: "email",
-            render: (text: string) => text,
+            render: (text: string) => <Link href={`mailto:${text}`}>{text}</Link>,
         },
         {
             title: "Phone",
             dataIndex: "phone",
             key: "phone",
-            render: (text: string) => text,
+            render: (text: string) => <span>{text}</span>,
         },
         {
             title: "Actions",
             dataIndex: "actions",
             key: "actions",
             render: (_text: string, row: Employee) => (
-                <div className="flex gap-4">
-                    <Button type="primary" onClick={() => handleEdit(row)}>
-                        Edit
-                    </Button>
-                    <Button variant="outlined" onClick={() => handleView(row)}>
-                        View
-                    </Button>
-                    <Popconfirm
-                        title="Are you sure you want to delete this employee?"
-                        onConfirm={() => handleDelete(row._id)}
-                        okText="Yes"
-                        cancelText="No"
-                    >
-                        <Button type="primary" danger>
-                            Delete
+                <Space size="middle">
+                    <Tooltip title="Edit">
+                        <Button
+                            type="primary"
+                            icon={<EditOutlined />}
+                            onClick={() => handleEdit(row)}
+                        />
+                    </Tooltip>
+
+                    <Tooltip title="View">
+                        <Button
+                            type="default"
+                            icon={<EyeOutlined />}
+                            onClick={() => handleView(row)}
+                        />
+                    </Tooltip>
+
+                    <Tooltip title="Profile">
+                        <Button type="link" icon={<UserOutlined />}>
+                            <Link href={`/admin/${row._id}`} passHref>
+                                <>Profile</>
+                            </Link>
                         </Button>
-                    </Popconfirm>
-                </div>
+                    </Tooltip>
+
+                    <Tooltip title="Delete">
+                        <Popconfirm
+                            title="Are you sure you want to delete this employee?"
+                            onConfirm={() => handleDelete(row._id)}
+                            okText="Yes"
+                            cancelText="No"
+                        >
+                            <Button type="primary" danger icon={<DeleteOutlined />} />
+                        </Popconfirm>
+                    </Tooltip>
+                </Space>
             ),
         },
     ];

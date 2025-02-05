@@ -45,15 +45,17 @@ export interface LoginFormData {
     password: string;
 }
 
+export interface breakDTO {
+    breakStart: Date;
+    breakEnd: Date;
+}
 export interface AttendanceRecord {
+    _id: string;
     userId: string;
     userName?: string;
     checkInTime: Date;
     checkOutTime: Date;
-    breaks: {
-        breakStart: Date;
-        breakEnd: Date;
-    }[];
+    breaks: breakDTO[];
 }
 
 export interface AttendanceByDay {

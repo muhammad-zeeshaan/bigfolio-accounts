@@ -2,7 +2,7 @@ import loadSession from "@/utils/session";
 import {Session} from "next-auth"
 import { initTRPC, TRPCError } from "@trpc/server";
 
-export const createContext = async (opts: any) => {
+export const createContext = async () => {
   const session = await loadSession();
   return {
     session: session as Session & { user: { role: "admin" | "user" } },
