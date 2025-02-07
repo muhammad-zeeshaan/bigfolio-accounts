@@ -40,7 +40,7 @@ const AdminLayout: React.FC<LayoutProps> = ({ children, session }) => {
     const handleLogout = () => {
         signOut();
     };
-
+    console.log(isDarkMode)
     const handleAccount = () => {
         router.push('/account');
     };

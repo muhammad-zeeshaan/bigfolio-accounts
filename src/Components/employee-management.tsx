@@ -14,7 +14,6 @@ export default function EmployeeManagement({ employees, totalRecords, limit, cur
     const router = useRouter();
     const [singleEmployee, setSingleEmployee] = useState<Employee | null>(null);
     const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
-    const [isAttendanceModalOpen, setIsAttendanceModalOpen] = useState<boolean>(false);
     const [isSalaryModalOpen, setSalaryModalOpen] = useState<boolean>(false);
     const [selectedRowKeys, setSelectedRowKeys] = useState<React.Key[]>([]);
 
@@ -83,10 +82,6 @@ export default function EmployeeManagement({ employees, totalRecords, limit, cur
         setSingleEmployee(emp);
         setSalaryModalOpen(true);
     };
-    const handleAttendence = (emp: Employee) => {
-        setSingleEmployee(emp);
-        setIsAttendanceModalOpen(!isAttendanceModalOpen);
-    }
 
     const handleDelete = async (id: string | undefined | null) => {
         if (!id) return;

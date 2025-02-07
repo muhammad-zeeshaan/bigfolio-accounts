@@ -2,7 +2,7 @@
 import React, { useState, useEffect } from 'react';
 import { Layout, Menu, Breadcrumb, Avatar, Dropdown, Space } from 'antd';
 import { ReactNode } from 'react';
-import { ConfigProvider, theme } from 'antd';
+import { ConfigProvider } from 'antd';
 import { redirect, usePathname, useRouter } from 'next/navigation';
 import { signOut } from 'next-auth/react';
 import { UserOutlined } from '@ant-design/icons';
@@ -27,7 +27,7 @@ const UserLayout: React.FC<LayoutProps> = ({ children, session }) => {
     useEffect(() => {
         setIsDarkMode(false);
     }, []);
-
+    console.log(isDarkMode)
     const handleLogout = () => {
         signOut();
     };
@@ -60,7 +60,6 @@ const UserLayout: React.FC<LayoutProps> = ({ children, session }) => {
 
     // Determine the active menu item based on the current pathname
     const getActiveMenuKey = () => {
-        const pathSegments = pathname.split('/');
         return menuItems.find(item => `/${item.key}` === pathname)
             ? pathname.split('/')[1]
             : 'app';

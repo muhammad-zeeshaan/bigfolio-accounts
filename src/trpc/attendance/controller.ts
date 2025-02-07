@@ -46,7 +46,7 @@ export const getMonthlyAttendance = async (year: number, month: number): Promise
     const startDate = new Date(year, month - 1, 1);
     const endDate = new Date(year, month - 1, new Date(year, month, 0).getDate(), 23, 59, 59, 999);
 
-    let query: { date: { $gte: Date; $lte: Date; }; userId?: mongoose.Types.ObjectId } = {
+    const query: { date: { $gte: Date; $lte: Date; }; userId?: mongoose.Types.ObjectId } = {
       date: {
         $gte: startDate,
         $lte: endDate,

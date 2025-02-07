@@ -20,6 +20,8 @@ export interface Employee extends BaseSalaryDetails {
     address: string;
     password: string;
     designation: string;
+    profileImage?: string;
+    documents?: string[];
 }
 
 export interface HistoryDTO extends BaseSalaryDetails {
@@ -61,6 +63,12 @@ export interface AttendanceRecord {
 export interface AttendanceByDay {
     [key: string]: AttendanceRecord[];
 }
+export interface AttendanceSummary {
+    attendanceByDay: AttendanceByDay;
+    totalPresent: number;
+    totalAbsents: number;
+    overtimeDays: number;
+}
 export interface SessionUser {
     name: string;
     email: string;
@@ -80,4 +88,5 @@ export interface SignUpFormData {
     phone: string;
     password: string;
     confirmPassword: string;
+    name: string;
 }

@@ -1,4 +1,4 @@
-import { protectedProcedure, publicProcedure, router } from "../init";
+import { protectedProcedure, router } from "../init";
 import {
   checkIn,
   checkOut,

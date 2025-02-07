@@ -24,3 +24,7 @@ body {
     --primary: #1677ff;
   }
 }
+.ant-form-item-control-input-content {
+  display: flex;
+  flex-direction: column;
+}

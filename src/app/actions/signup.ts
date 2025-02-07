@@ -1,14 +1,35 @@
 "use server";
 import User from '@/models/User';
+import { SignUpFormData } from '../types';
 
-export const signUp = async (formData: any): Promise<{ success: boolean, message: string, user?: any }> => {
+// interface SignUpFormData {
+//     email: string;
+//     password: string;
+//     designation: string;
+//     name: string;
+//     phone: string;
+// }
 
+interface SignUpResponse {
+    success: boolean;
+    message: string;
+    user?: unknown;
+}
+
+interface MongoError extends Error {
+    code?: number;
+    keyPattern?: {
+        email?: boolean;
+    };
+}
+
+export const signUp = async (formData: SignUpFormData): Promise<SignUpResponse> => {
     const userData = {
-        email: formData?.email,
-        password: formData?.password,
-        designation: formData?.designation,
+        email: formData.email,
+        password: formData.password,
+        designation: formData.designation,
         name: formData?.name,
-        phone: formData?.phone,
+        phone: formData.phone,
         basicSalary: 0,
         salaryStatus: "Pending",
     };
@@ -16,11 +37,12 @@ export const signUp = async (formData: any): Promise<{ success: boolean, message
     try {
         const user = await User.create(userData);
         return { success: true, user, message: 'User created successfully' };
-    } catch (error: any) {
-        if (error.code === 11000 && error.keyPattern?.email) {
+    } catch (error) {
+        const mongoError = error as MongoError;
+        if (mongoError.code === 11000 && mongoError.keyPattern?.email) {
             return { success: false, message: 'User already exists with this email.' };
         }
-        console.error('Error creating user:', error);
+        console.error('Error creating user:', mongoError);
         return { success: false, message: 'User creation failed.' };
     }
 };

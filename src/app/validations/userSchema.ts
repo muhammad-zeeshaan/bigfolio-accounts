@@ -28,6 +28,8 @@ export const addEmployeeSchema = z.object({
     tax: z.number().min(0, "Tax must be a positive number").default(0),
     holiday: z.number().min(0, "Holiday must be a positive number").default(0),
     designation: z.string().optional(),
+    profileImage: z.string().optional(),
+    documents: z.array(z.string()).optional(),
 });
 
 export const editEmployeeSchema = z.object({
@@ -49,6 +51,8 @@ export const editEmployeeSchema = z.object({
     tax: z.number().min(0, "Tax must be a positive number").default(0),
     holiday: z.number().min(0, "Holiday must be a positive number").default(0),
     designation: z.string().optional(),
+    profileImage: z.string().optional(),
+    documents: z.array(z.string()).optional(),
 });
 
 export const employeeIdSchema = z.object({

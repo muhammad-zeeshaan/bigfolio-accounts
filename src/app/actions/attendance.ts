@@ -1,7 +1,7 @@
 "use server"
 import Attendance from '@/models/Attendance';
 import mongoose from 'mongoose';
-import { AttendanceByDay, SessionUser } from '../types';
+import { AttendanceByDay, AttendanceSummary, SessionUser } from '../types';
 import loadSession from '@/utils/session';
 
 export const checkIn = async (userId: string) => {
@@ -44,7 +44,7 @@ export const getMonthlyAttendance = async (year: number, month: number): Promise
         const startDate = new Date(year, month - 1, 1);
         const endDate = new Date(year, month - 1, new Date(year, month, 0).getDate(), 23, 59, 59, 999);
 
-        let query: { date: { $gte: Date; $lte: Date; }; userId?: mongoose.Types.ObjectId } = {
+        const query: { date: { $gte: Date; $lte: Date; }; userId?: mongoose.Types.ObjectId } = {
             date: {
                 $gte: startDate,
                 $lte: endDate,
@@ -87,41 +87,59 @@ export const getMonthlyAttendance = async (year: number, month: number): Promise
         return {}
     }
 };
-export const getMonthlyUserAttendance = async (year: number, month: number, userId: string): Promise<AttendanceByDay> => {
+export const getMonthlyUserAttendance = async (
+    year: number,
+    month: number,
+    userId: string
+): Promise<AttendanceSummary> => {
     const session = await loadSession();
     if (!session) {
-        throw new Error('You must be logged in to view attendance records');
+        throw new Error("You must be logged in to view attendance records");
     }
 
     try {
         const startDate = new Date(year, month - 1, 1);
         const endDate = new Date(year, month - 1, new Date(year, month, 0).getDate(), 23, 59, 59, 999);
+        const today = new Date();
+        const isCurrentMonth = year === today.getFullYear() && month === today.getMonth() + 1;
+        const lastValidDay = isCurrentMonth ? today.getDate() : new Date(year, month, 0).getDate();
 
-        let query: { date: { $gte: Date; $lte: Date; }; userId?: mongoose.Types.ObjectId } = {
+        const query: { date: { $gte: Date; $lte: Date }; userId?: mongoose.Types.ObjectId } = {
             date: {
                 $gte: startDate,
                 $lte: endDate,
             },
         };
-        const currentUser = session.user as SessionUser;
+
         query.userId = new mongoose.Types.ObjectId(userId);
 
         const attendanceRecords = await Attendance.find(query)
             .populate({
-                path: 'userId',
-                model: 'User',
-                select: 'name',
+                path: "userId",
+                model: "User",
+                select: "name",
             })
             .lean();
 
         const attendanceByDay: AttendanceByDay = {};
+        let totalPresent = 0;
+        let totalAbsents = 0;
+        let overtimeDays = 0;
+        const presentDays = new Set<string>(); 
 
         attendanceRecords.forEach((record) => {
             const day = new Date(record.date);
-            const dateKey = `${day.getDate().toString().padStart(2, '0')}-${(day.getMonth() + 1).toString().padStart(2, '0')}-${day.getFullYear()}`;
+            const dateKey = `${day.getDate().toString().padStart(2, "0")}-${(day.getMonth() + 1).toString().padStart(2, "0")}-${day.getFullYear()}`;
+
             if (!attendanceByDay[dateKey]) {
                 attendanceByDay[dateKey] = [];
             }
+
+            const isWeekend = day.getDay() === 6 || day.getDay() === 0; // Saturday (6) & Sunday (0)
+            if (isWeekend) {
+                overtimeDays++;
+            }
+
             attendanceByDay[dateKey].push({
                 _id: String(record._id),
                 userId: record.userId._id as string,
@@ -130,14 +148,40 @@ export const getMonthlyUserAttendance = async (year: number, month: number, user
                 checkOutTime: record.checkOutTime,
                 breaks: record.breaks || [],
             });
+
+            presentDays.add(dateKey);
         });
 
-        return attendanceByDay;
+        // Calculate total absents (excluding weekends) up to today's date
+        for (let day = 1; day <= lastValidDay; day++) {
+            const date = new Date(year, month - 1, day);
+            const dateKey = `${day.toString().padStart(2, "0")}-${month.toString().padStart(2, "0")}-${year}`;
+
+            const isWeekend = date.getDay() === 6 || date.getDay() === 0;
+            if (!isWeekend && !presentDays.has(dateKey)) {
+                totalAbsents++;
+            }
+        }
+
+        totalPresent = presentDays.size;
+
+        return {
+            attendanceByDay,
+            totalPresent,
+            totalAbsents,
+            overtimeDays,
+        };
     } catch (error) {
-        console.error('Error fetching attendance records:', error);
-        return {}
+        console.error("Error fetching attendance records:", error);
+        return {
+            attendanceByDay: {},
+            totalPresent: 0,
+            totalAbsents: 0,
+            overtimeDays: 0,
+        };
     }
 };
+
 export const checkOut = async (userId: string) => {
     try {
         const today = new Date();
@@ -169,6 +213,7 @@ export const checkOut = async (userId: string) => {
         return { message: 'You have not checked in today!', attendance: null };
     }
 };
+
 export const startBreak = async (userId: string) => {
     try {
         const today = new Date();

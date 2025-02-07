@@ -19,7 +19,11 @@ const EditAttendanceModal: React.FC<EditAttendanceModalProps> = ({ visible, onCl
     const router = useRouter()
     const updateAttendance = trpc.attendance.updateAttendance.useMutation({
         onSuccess: (data) => {
-            data?.success ? message.success(data.message) : message.warning(data.message);
+            if (data?.success) {
+                message.success(data.message)
+            } else {
+                message.warning(data.message)
+            }
             onClose();
             router.refresh()
         },

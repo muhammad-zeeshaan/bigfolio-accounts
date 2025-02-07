@@ -10,22 +10,27 @@ import {
     Typography,
     Popover,
     List,
+  Avatar,
+  Descriptions,
+  Statistic,
 } from "antd";
 import type { Dayjs } from "dayjs";
-import { AttendanceByDay, AttendanceRecord, SessionUser } from "@/app/types";
+import { AttendanceRecord, AttendanceSummary, Employee, ErrorResponse } from "@/app/types";
 import EditAttendanceModal from './editAttendanceModal';
-
+import { ArrowDownOutlined, ArrowUpOutlined, RetweetOutlined } from '@ant-design/icons';
+import { Pie } from "@ant-design/plots";
 interface CalendarCompProps {
-    attendanceDetails: AttendanceByDay;
+  attendanceDetails: AttendanceSummary;
+  userData: Employee | ErrorResponse;
 }
 
-const getListData = (value: Dayjs, attendanceDetails: AttendanceByDay) => {
+const getListData = (value: Dayjs, attendanceDetails: AttendanceSummary) => {
     const userMap: Record<string, { checkInTime: string; checkOutTime: string; breaks: string[] }> = {};
 
     const dateKey = `${value.date().toString().padStart(2, "0")}-${(value.month() + 1).toString().padStart(2, "0")}-${value.year()}`;
 
-    if (attendanceDetails[dateKey]) {
-        attendanceDetails[dateKey].forEach((entry: AttendanceRecord) => {
+  if (attendanceDetails?.attendanceByDay[dateKey]) {
+    attendanceDetails?.attendanceByDay[dateKey].forEach((entry: AttendanceRecord) => {
             const userName = entry.userName || "Unknown User";
             const checkInTime = entry.checkInTime
                 ? new Date(entry.checkInTime).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })
@@ -58,16 +63,44 @@ const getListData = (value: Dayjs, attendanceDetails: AttendanceByDay) => {
     }));
 };
 
-const CalendarComp: React.FC<CalendarCompProps> = ({ attendanceDetails }) => {
+const CalendarComp: React.FC<CalendarCompProps> = ({ attendanceDetails, userData }) => {
     const [attendanceData, setAttendanceData] = useState<AttendanceRecord | null>(null);
+  const [attendanceModal, setAttendanceModal] = useState<boolean>(false);
 
+  const onClose = (): void => {
+    setAttendanceModal(!attendanceModal);
+  };
+  const isEmployee = (data: Employee | ErrorResponse): data is Employee => {
+    return (data as Employee).email !== undefined;
+  };
+  const data = [
+    { type: "Overtime Days", value: attendanceDetails.overtimeDays },
+    { type: "Total Absents", value: attendanceDetails.totalAbsents },
+    { type: "Total Present", value: attendanceDetails.totalPresent },
+  ];
+
+  const config = {
+    data,
+    angleField: "value",
+    colorField: "type",
+    color: ["#1890ff", "#ff4d4f", "#52c41a"],
+    radius: 0.9,
+    innerRadius: 0.6,
+    interactions: [{ type: "element-active" }],
+    legend: {
+      color: {
+        itemMarker: 'circe',
+        cols: 3,
+        colPadding: 4,
+        title: false,
+        position: "bottom",
+        rowPadding: 25,
+      },
+    },
+  };
     const dateCellRender = (value: Dayjs) => {
         const dateKey = `${value.date().toString().padStart(2, "0")}-${(value.month() + 1).toString().padStart(2, "0")}-${value.year()}`;
-        const userData = getListData(value, attendanceDetails);
-        const [attendanceModal, setAttendanceModal] = useState<boolean>(false);
-        const onClose = (): void => {
-            setAttendanceModal(!attendanceModal)
-        }
+      const userData = getListData(value, attendanceDetails);
 
         return userData.length > 0 ? (
             <Popover
@@ -103,8 +136,8 @@ const CalendarComp: React.FC<CalendarCompProps> = ({ attendanceDetails }) => {
                             )}
                         />
                         <Button size='small' onClick={() => {
-                            setAttendanceData(attendanceDetails[dateKey][0])
-                            onClose()
+                  setAttendanceData(attendanceDetails?.attendanceByDay[dateKey][0]);
+                  onClose();
                         }} className='ml-3 mt-2' type='primary'>Change Attendance</Button>
                         <EditAttendanceModal visible={attendanceModal} onClose={onClose} attendance={attendanceData as AttendanceRecord & null} />
                     </>
@@ -127,13 +160,61 @@ const CalendarComp: React.FC<CalendarCompProps> = ({ attendanceDetails }) => {
 
     return (
         <Card title="Attendance Tracker" bordered={false} style={{ borderRadius: 10 }}>
-            <Row justify="space-between" align="middle" style={{ marginBottom: 16 }}>
-                <Col>
-                    <Typography.Title level={4}>Track Your Attendance</Typography.Title>
-                </Col>
-            </Row>
-            <Calendar cellRender={dateCellRender} />
+        <Card className="!my-3">
+          <Typography.Title level={3} style={{ textAlign: "center", marginBottom: 20 }}>
+            Track Your Attendance
+          </Typography.Title>
+          <Row gutter={200} justify="center">
+            <Col>
+              <Statistic title="Overtime Days" prefix={<RetweetOutlined />} value={attendanceDetails.overtimeDays} valueStyle={{ color: "#1890ff" }} />
+            </Col>
+            <Col>
+              <Statistic title="Total Absents" prefix={<ArrowDownOutlined />} value={attendanceDetails.totalAbsents} valueStyle={{ color: "#ff4d4f" }} />
+            </Col>
+            <Col>
+              <Statistic title="Total Present" prefix={<ArrowUpOutlined />} value={attendanceDetails.totalPresent} valueStyle={{ color: "#52c41a" }} />
+            </Col>
+          </Row>
         </Card>
+
+        {/* Attendance Chart */}
+        <Card bordered={false} style={{ borderRadius: 10, marginTop: 20 }}>
+          <Typography.Title level={4} style={{ textAlign: "center", marginBottom: 20 }}>
+            Attendance Overview
+          </Typography.Title>
+        </Card>
+
+        <Row gutter={16} style={{ marginTop: 20 }}>
+          <Col span={6}>
+            <Card bordered={false} style={{ borderRadius: 10, textAlign: "center" }}>
+              {isEmployee(userData) && <Avatar size={128} src={userData.profileImage} />}
+              {isEmployee(userData) ? (
+                <>
+                  <Descriptions title="User Info" column={1} size="small">
+                    <Descriptions.Item label="Name">{userData.name}</Descriptions.Item>
+                    <Descriptions.Item label="Email">{userData.email}</Descriptions.Item>
+                    <Descriptions.Item label="Personal Email">{userData.personalEmail}</Descriptions.Item>
+                    <Descriptions.Item label="Phone">{userData.phone}</Descriptions.Item>
+                    <Descriptions.Item label="Designation">{userData.designation}</Descriptions.Item>
+                    <Descriptions.Item label="Joining Date">{new Date(userData.joiningDate).toLocaleDateString()}</Descriptions.Item>
+                    {userData.leavingDate && <Descriptions.Item label="Leaving Date">{new Date(userData.leavingDate).toLocaleDateString()}</Descriptions.Item>}
+                  </Descriptions>
+                  <div className='-mt-10'>
+                    <Pie {...config} />
+                  </div>
+                </>
+              ) : (
+                <Typography.Text type="danger">{userData.message}</Typography.Text>
+              )}
+            </Card>
+          </Col>
+          <Col span={18}>
+            <Card bordered={false} style={{ borderRadius: 10 }}>
+              <Calendar cellRender={dateCellRender} />
+            </Card>
+          </Col>
+        </Row>
+      </Card>
     );
 };
 

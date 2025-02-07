@@ -5,7 +5,6 @@ import { ObjectId } from "mongodb";
 import User from '@/models/User';
 import transporter from '@/utils/mailer';
 import SlipTemplate from '@/Components/SlipTemplate';
-import React from 'react';
 import History from '@/models/History';
 import { SendSalarySlipRequest } from '../validations/userSchema';
 

@@ -81,7 +81,11 @@ const CalendarComp: React.FC<CalendarCompProps> = ({ attendanceDetails }) => {
 
     const checkInMutation = trpc.attendance.checkIn.useMutation({
         onSuccess: (res) => {
-            res.attendance ? message.success(res.message) : message.warning(res.message);
+            if (res.attendance) {
+                message.success(res.message)
+            } else {
+                message.warning(res.message);
+            }
             router.refresh();
         },
         onError: () => message.error("Error during check-in"),
@@ -89,7 +93,11 @@ const CalendarComp: React.FC<CalendarCompProps> = ({ attendanceDetails }) => {
 
     const checkOutMutation = trpc.attendance.checkOut.useMutation({
         onSuccess: (res) => {
-            res.attendance ? message.success(res.message) : message.warning(res.message);
+            if (res.attendance) {
+                message.success(res.message)
+            } else {
+                message.warning(res.message);
+            }
             router.refresh();
         },
         onError: () => message.error("Error during check-out"),
@@ -97,7 +105,11 @@ const CalendarComp: React.FC<CalendarCompProps> = ({ attendanceDetails }) => {
 
     const startBreakMutation = trpc.attendance.startBreak.useMutation({
         onSuccess: (res) => {
-            res.attendance ? message.success(res.message) : message.warning(res.message);
+            if (res.attendance) {
+                message.success(res.message)
+            } else {
+                message.warning(res.message);
+            }
             router.refresh();
         },
         onError: () => message.error("Error starting break"),
@@ -105,7 +117,9 @@ const CalendarComp: React.FC<CalendarCompProps> = ({ attendanceDetails }) => {
 
     const endBreakMutation = trpc.attendance.endBreak.useMutation({
         onSuccess: (res) => {
-            res.attendance ? message.success(res.message) : message.warning(res.message);
+            if (res.attendance) {
+                message.success(res.message)
+            } else { message.warning(res.message); }
             router.refresh();
         },
         onError: () => message.error("Error ending break"),

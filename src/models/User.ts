@@ -1,4 +1,4 @@
-import { Schema, model, models, Document } from "mongoose";
+import { Schema, model, models } from "mongoose";
 import bcrypt from "bcrypt";
 
 const userSchema = new Schema(
@@ -70,6 +70,12 @@ const userSchema = new Schema(
     designation: {
       type: String,
     },
+    profileImage: {
+      type: String,
+    },
+    documents: {
+      type: [String],
+    }
   },
   {
     timestamps: true,
