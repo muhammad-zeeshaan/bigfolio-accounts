@@ -1,5 +1,5 @@
 import { addEmployeeSchema, editEmployeeSchema, employeeIdSchema, fetchEmployeesSchema, SendSalarySlipRequestSchema } from '@/app/validations/userSchema';
-import { protectedProcedure, router } from "../init";
+import { protectedProcedure, router,publicProcedure } from "../init";
 import {
     fetchEmployees,
     getEmployeeById,
@@ -10,7 +10,7 @@ import {
 import { SendSalarySlip } from '@/app/actions/sendPDF';
 
 const employeeRouter = router({
-    fetchEmployees: protectedProcedure
+    fetchEmployees: publicProcedure
         .input(fetchEmployeesSchema)
         .query(({ input }) => fetchEmployees(input.page, input.limit)),
 
