@@ -159,12 +159,11 @@ const CalendarComp: React.FC<CalendarCompProps> = ({ attendanceDetails, userData
     };
 
     return (
-        <Card title="Attendance Tracker" bordered={false} style={{ borderRadius: 10 }}>
+      <>
+        <Typography.Title level={1}>Attendance Tracker</Typography.Title>
         <Card className="!my-3">
-          <Typography.Title level={3} style={{ textAlign: "center", marginBottom: 20 }}>
-            Track Your Attendance
-          </Typography.Title>
-          <Row gutter={200} justify="center">
+          <h1 className="text-2xl font-bold mb-6">Track Your Attendance</h1>
+          <Row gutter={100} justify="center">
             <Col>
               <Statistic title="Overtime Days" prefix={<RetweetOutlined />} value={attendanceDetails.overtimeDays} valueStyle={{ color: "#1890ff" }} />
             </Col>
@@ -214,7 +213,7 @@ const CalendarComp: React.FC<CalendarCompProps> = ({ attendanceDetails, userData
             </Card>
           </Col>
         </Row>
-      </Card>
+      </>
     );
 };
 

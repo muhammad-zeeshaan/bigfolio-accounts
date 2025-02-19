@@ -1,9 +1,16 @@
+import AdminLayout from '@/Components/adminLayout'
+import AdminDashboard from '@/Components/dashboard'
+import loadSession from '@/utils/session';
 import React from 'react'
+import { SessionDTO } from './types';
 
-export default function page() {
+export default async function page() {
+    const session = await loadSession() as SessionDTO | undefined;
     return (
-        <div>
-            main page
-        </div>
+        <AdminLayout session={session}>
+            <AdminDashboard />
+            {/* <Invoice /> */}
+        </AdminLayout>
+        // <Invoice />
     )
 }

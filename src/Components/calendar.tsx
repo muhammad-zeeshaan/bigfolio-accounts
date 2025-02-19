@@ -178,10 +178,10 @@ const CalendarComp: React.FC<CalendarCompProps> = ({ attendanceDetails }) => {
     };
 
     return (
-        <Card title="Attendance Tracker" bordered={false} style={{ borderRadius: 10 }}>
+        <Card bordered={false}>
             <Row justify="space-between" align="middle" style={{ marginBottom: 16 }}>
                 <Col>
-                    <Typography.Title level={4}>Track Your Attendance</Typography.Title>
+                    <h1 className="text-2xl font-bold mb-6">Track Your Attendance</h1>
                 </Col>
                 <Col>
                     <Space>

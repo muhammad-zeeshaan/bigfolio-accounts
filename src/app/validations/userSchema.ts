@@ -61,9 +61,45 @@ export const employeeIdSchema = z.object({
 export const SendSalarySlipRequestSchema = z.object({
     employeeIds: z.array(z.unknown()),
 });
+const InvoiceItemSchema = z.object({
+    ticket: z.string(),
+    hours: z.number(),
+    price: z.number(),
+});
 
+const InvoiceToSchema = z.object({
+    invoiceItem: z.string(),
+});
+
+const BillToSchema = z.object({
+    billToHeading: z.string(),
+    billToValue: z.string(),
+});
+
+// Main Invoice Schema
+export const InvoiceSchema = z.object({
+    invoiceNumber: z.string(),
+    customerName: z.string(),
+    items: z.array(InvoiceItemSchema),
+    invoiceTo: z.array(InvoiceToSchema),
+    billTo: z.array(BillToSchema),
+    subtotal: z.number(),
+    discount: z.number(),
+    tax: z.number(),
+    total: z.number(),
+    salesperson: z.string(),
+    dateIssued: z.coerce.date().optional(), // Converts string/number to Date
+    dateDue: z.coerce.date().optional(),
+    email: z.string().email().optional(),
+    dateRange: z.tuple([z.coerce.date(), z.coerce.date()]).optional(),
+});
+export const SendInvoiceSchema = z.object({
+    email: z.string().min(1, "email is required"),
+    invoiceData: InvoiceSchema,
+});
 export type addEmployeeType = z.infer<typeof addEmployeeSchema>;
 export type editEmployeeType = z.infer<typeof editEmployeeSchema>;
 export type fetchEmployeesType = z.infer<typeof fetchEmployeesSchema>;
 export type employeeIdType = z.infer<typeof employeeIdSchema>;
 export type SendSalarySlipRequest = z.infer<typeof SendSalarySlipRequestSchema>;
+export type SendInvoiceRequestType = z.infer<typeof SendInvoiceSchema>;

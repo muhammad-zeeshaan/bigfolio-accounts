@@ -35,6 +35,7 @@ export const checkIn = async (userId: string) => {
     }
 };
 export const getMonthlyAttendance = async (year: number, month: number): Promise<AttendanceByDay> => {
+
     const session = await loadSession();
     if (!session) {
         throw new Error('You must be logged in to view attendance records');
@@ -54,7 +55,6 @@ export const getMonthlyAttendance = async (year: number, month: number): Promise
         if (currentUser?.role !== 'admin') {
             query.userId = new mongoose.Types.ObjectId(currentUser?.id);
         }
-
         const attendanceRecords = await Attendance.find(query)
             .populate({
                 path: 'userId',
@@ -72,7 +72,7 @@ export const getMonthlyAttendance = async (year: number, month: number): Promise
                 attendanceByDay[dateKey] = [];
             }
             attendanceByDay[dateKey].push({
-                _id: String(record._id),
+                _id: String(record?._id),
                 userId: record.userId._id as string,
                 userName: record.userId.name,
                 checkInTime: record.checkInTime,
@@ -80,7 +80,6 @@ export const getMonthlyAttendance = async (year: number, month: number): Promise
                 breaks: record.breaks || [],
             });
         });
-
         return attendanceByDay;
     } catch (error) {
         console.error('Error fetching attendance records:', error);
@@ -141,8 +140,8 @@ export const getMonthlyUserAttendance = async (
             }
 
             attendanceByDay[dateKey].push({
-                _id: String(record._id),
-                userId: record.userId._id as string,
+                _id: String(record?._id),
+                userId: record?.userId?._id as string,
                 userName: record.userId.name,
                 checkInTime: record.checkInTime,
                 checkOutTime: record.checkOutTime,

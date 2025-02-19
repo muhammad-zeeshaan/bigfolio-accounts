@@ -40,25 +40,27 @@ const AdminLayout: React.FC<LayoutProps> = ({ children, session }) => {
     const handleLogout = () => {
         signOut();
     };
-    console.log(isDarkMode)
+
     const handleAccount = () => {
         router.push('/account');
     };
 
     const menuItems = [
-        { key: 'admin', label: 'Home', href: '/admin' },
+        { key: 'home', label: 'Home', href: '/' },
+        { key: 'admin', label: 'Employee', href: '/admin' },
         { key: 'calendar', label: 'Calendar', href: '/admin/calendar' },
         { key: 'history', label: 'History', href: '/admin/history' },
-        { key: 'app', label: 'App', href: '/admin/app' },
+        { key: 'invoice', label: 'Invoice', href: '/admin/invoice' },
     ];
 
-    const breadcrumbItems = [
-        { key: 'home', title: 'Home', href: '/admin' },
-        { key: 'calendar', title: 'Calendar', href: '/admin/calendar' },
-        { key: 'app', title: 'App', href: '/' },
-    ];
-
-    // Dropdown menu for user actions (Logout, My Account)
+    const generateBreadcrumbs = () => {
+        const pathSegments = pathname.split('/').filter(Boolean);
+        return pathSegments.map((segment, index) => {
+            const url = `/${pathSegments.slice(0, index + 1).join('/')}`;
+            return { title: <Link href={url}>{segment.charAt(0).toUpperCase() + segment.slice(1)}</Link>, key: url };
+        });
+    };
+    console.log(isDarkMode)
     const userMenu = (
         <Menu>
             <Menu.Item key="account" onClick={handleAccount}>
@@ -70,23 +72,34 @@ const AdminLayout: React.FC<LayoutProps> = ({ children, session }) => {
         </Menu>
     );
 
+    const activeKeys = () => {
+        const activeItem = menuItems.find((item) => item.href === pathname);
+        return activeItem ? [activeItem.key] : [];
+    };
+
     return (
         <ConfigProvider>
             <Layout>
                 <Header style={{ position: 'fixed', width: '100%', zIndex: 99 }}>
-                    <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                        <Menu
-                            theme="dark"
-                            mode="horizontal"
-                            selectedKeys={[pathname.split('/')[2] || 'admin']}
-                            style={{ lineHeight: '64px' }}
-                        >
-                            {menuItems.map((item) => (
-                                <Menu.Item key={item.key}>
-                                    <Link href={item.href}>{item.label}</Link>
-                                </Menu.Item>
-                            ))}
-                        </Menu>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                        <div style={{ display: 'flex', alignItems: 'center' }}>
+                            {/* Logo */}
+                            <Link href="/">
+                                <img src="/bigfolio-logo.svg" alt="Logo" style={{ height: 40, marginRight: 16 }} />
+                            </Link>
+                            <Menu
+                                theme="dark"
+                                mode="horizontal"
+                                selectedKeys={activeKeys()}
+                                style={{ lineHeight: '64px' }}
+                            >
+                                {menuItems.map((item) => (
+                                    <Menu.Item key={item.key}>
+                                        <Link href={item.href}>{item.label}</Link>
+                                    </Menu.Item>
+                                ))}
+                            </Menu>
+                        </div>
                         <Dropdown overlay={userMenu} trigger={['click']}>
                             <a onClick={(e) => e.preventDefault()}>
                                 <Space>
@@ -97,13 +110,13 @@ const AdminLayout: React.FC<LayoutProps> = ({ children, session }) => {
                     </div>
                 </Header>
                 <Content style={{ padding: '0 50px', marginTop: 64 }}>
-                    <Breadcrumb style={{ margin: '16px 0' }} items={breadcrumbItems} />
-                    <div style={{ background: '#fff', padding: 24, minHeight: 380 }}>
+                    <Breadcrumb style={{ margin: '16px 0' }} items={generateBreadcrumbs()} />
+                    <div style={{ padding: 24, minHeight: 380 }}>
                         {children}
                     </div>
                 </Content>
                 <Footer style={{ textAlign: 'center' }}>
-                    Ant Design ©2016 Created by Ant UED
+                    Bigfolio accounts ©2025 Created by Bigfolio LLC
                 </Footer>
             </Layout>
         </ConfigProvider>

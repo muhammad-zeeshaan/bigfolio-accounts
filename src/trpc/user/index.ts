@@ -1,4 +1,4 @@
-import { addEmployeeSchema, editEmployeeSchema, employeeIdSchema, fetchEmployeesSchema, SendSalarySlipRequestSchema } from '@/app/validations/userSchema';
+import { addEmployeeSchema, editEmployeeSchema, employeeIdSchema, fetchEmployeesSchema, SendInvoiceSchema, SendSalarySlipRequestSchema } from '@/app/validations/userSchema';
 import { protectedProcedure, router,publicProcedure } from "../init";
 import {
     fetchEmployees,
@@ -7,7 +7,7 @@ import {
     editEmployee,
     deleteEmployee
 } from "./controller";
-import { SendSalarySlip } from '@/app/actions/sendPDF';
+import { SendInvoice, SendSalarySlip } from '@/app/actions/sendPDF';
 
 const employeeRouter = router({
     fetchEmployees: publicProcedure
@@ -30,7 +30,9 @@ const employeeRouter = router({
         .input(employeeIdSchema)
         .mutation(({ input }) => deleteEmployee(input.id)),
     sendSalarySlip: protectedProcedure
-        .input(SendSalarySlipRequestSchema).mutation(({ input }) => SendSalarySlip(input))
+        .input(SendSalarySlipRequestSchema).mutation(({ input }) => SendSalarySlip(input)),
+    sendInvoice: protectedProcedure
+        .input(SendInvoiceSchema).mutation(({ input }) => SendInvoice(input)),
 });
 
 export default employeeRouter;

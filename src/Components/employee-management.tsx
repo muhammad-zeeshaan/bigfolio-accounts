@@ -95,7 +95,7 @@ export default function EmployeeManagement({ employees, totalRecords, limit, cur
 
     return (
         <main className="max-w-7xl mx-auto">
-            <h1 className="text-3xl font-semibold">Employee Management</h1>
+            <h1 className="text-2xl font-bold mb-6">Employee Management</h1>
             <div className="mb-4 flex justify-end gap-3">
                 <Button
                     type="primary"

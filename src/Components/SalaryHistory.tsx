@@ -65,7 +65,7 @@ export default function SalaryHistory({
 
     return (
         <>
-            <h1 className="text-3xl font-semibold mb-4">Employee History</h1>
+            <h1 className="text-2xl font-bold mb-6">Employee History</h1>
             {filterComponents}
             <Table
                 data={history}

@@ -6,7 +6,8 @@ import User from '@/models/User';
 import transporter from '@/utils/mailer';
 import SlipTemplate from '@/Components/SlipTemplate';
 import History from '@/models/History';
-import { SendSalarySlipRequest } from '../validations/userSchema';
+import { SendInvoiceRequestType, SendSalarySlipRequest } from '../validations/userSchema';
+import InvoiceTemplate from '@/Components/InvoiceTemplate';
 
 async function generatePDF(html: string): Promise<Buffer> {
     const browser = await puppeteer.launch({
@@ -80,6 +81,39 @@ export async function SendSalarySlip(req: SendSalarySlipRequest): Promise<{ mess
         }
 
         return { message: 'Emails sent successfully' };
+    } catch (error: unknown) {
+        const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
+        return { message: 'Internal server error', error: errorMessage };
+    }
+}
+export async function SendInvoice(req: SendInvoiceRequestType): Promise<{ message: string; error?: string }> {
+    const { email, invoiceData } = req;
+
+    if (!invoiceData) {
+        return { message: 'Invoice not found' };
+    }
+
+    try {
+        const html = InvoiceTemplate({ invoiceData });
+        const pdfBuffer = await generatePDF(html);
+
+        const mailOptions: MailOptions = {
+            from: process.env.EMAIL || '',
+            to: email,
+            subject: 'Invoice',
+            text: 'Please find your invoice attached.',
+            attachments: [
+                {
+                    filename: 'Invoice.pdf',
+                    content: pdfBuffer,
+                    contentType: 'application/pdf',
+                },
+            ],
+        };
+
+        await transporter.sendMail(mailOptions);
+
+        return { message: 'Invoice sent successfully' };
     } catch (error: unknown) {
         const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
         return { message: 'Internal server error', error: errorMessage };

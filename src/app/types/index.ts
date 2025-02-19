@@ -90,3 +90,32 @@ export interface SignUpFormData {
     confirmPassword: string;
     name: string;
 }
+export interface InvoiceItem {
+    ticket: string;
+    hours: number;
+    price: number;
+}
+export interface invoiceToDTO {
+    invoiceItem: string;
+}
+
+export interface billToDTO {
+    billToHeading: string;
+    billToValue: string;
+}
+export interface InvoiceData {
+    invoiceNumber: string;
+    customerName: string;
+    items: InvoiceItem[];
+    invoiceTo: invoiceToDTO[];
+    billTo: billToDTO[];
+    subtotal: number;
+    discount: number;
+    tax: number;
+    total: number;
+    salesperson: string;
+    dateIssued?: Date;
+    dateDue?: Date;
+    email?: string;
+    dateRange?: [Date, Date];
+}
