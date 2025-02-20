@@ -88,7 +88,7 @@ export const InvoiceSchema = z.object({
     tax: z.number(),
     total: z.number(),
     salesperson: z.string(),
-    dateIssued: z.coerce.date().optional(), // Converts string/number to Date
+    dateIssued: z.coerce.date().optional(),
     dateDue: z.coerce.date().optional(),
     email: z.string().email().optional(),
     dateRange: z.tuple([z.coerce.date(), z.coerce.date()]).optional(),

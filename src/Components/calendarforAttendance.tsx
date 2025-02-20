@@ -160,28 +160,67 @@ const CalendarComp: React.FC<CalendarCompProps> = ({ attendanceDetails, userData
 
     return (
       <>
-        <Typography.Title level={1}>Attendance Tracker</Typography.Title>
-        <Card className="!my-3">
-          <h1 className="text-2xl font-bold mb-6">Track Your Attendance</h1>
-          <Row gutter={100} justify="center">
-            <Col>
-              <Statistic title="Overtime Days" prefix={<RetweetOutlined />} value={attendanceDetails.overtimeDays} valueStyle={{ color: "#1890ff" }} />
+        <h1 className="text-2xl font-bold mb-6">Attendance Tracker</h1>
+        <div className="!my-3">
+          {/* <h1 className="text-2xl font-bold mb-6">Track Your Attendance</h1> */}
+          <Row gutter={24} justify="center">
+            <Col span={8}>
+              <Card
+                bordered={false}
+                style={{
+                  borderRadius: "12px",
+                  boxShadow: "0 4px 10px rgba(0, 0, 0, 0.1)",
+                  textAlign: "center",
+                  background: "#e6f7ff",
+                }}
+              >
+                <Statistic
+                  title="Overtime Days"
+                  value={attendanceDetails.overtimeDays}
+                  valueStyle={{ color: "#1890ff", fontSize: "22px", fontWeight: "bold" }}
+                  prefix={<RetweetOutlined style={{ fontSize: "24px", color: "#1890ff" }} />}
+                />
+              </Card>
             </Col>
-            <Col>
-              <Statistic title="Total Absents" prefix={<ArrowDownOutlined />} value={attendanceDetails.totalAbsents} valueStyle={{ color: "#ff4d4f" }} />
+            <Col span={8}>
+              <Card
+                bordered={false}
+                style={{
+                  borderRadius: "12px",
+                  boxShadow: "0 4px 10px rgba(0, 0, 0, 0.1)",
+                  textAlign: "center",
+                  background: "#fff1f0",
+                }}
+              >
+                <Statistic
+                  title="Total Absents"
+                  value={attendanceDetails.totalAbsents}
+                  valueStyle={{ color: "#ff4d4f", fontSize: "22px", fontWeight: "bold" }}
+                  prefix={<ArrowDownOutlined style={{ fontSize: "24px", color: "#ff4d4f" }} />}
+                />
+              </Card>
             </Col>
-            <Col>
-              <Statistic title="Total Present" prefix={<ArrowUpOutlined />} value={attendanceDetails.totalPresent} valueStyle={{ color: "#52c41a" }} />
+            <Col span={8}>
+              <Card
+                bordered={false}
+                style={{
+                  borderRadius: "12px",
+                  boxShadow: "0 4px 10px rgba(0, 0, 0, 0.1)",
+                  textAlign: "center",
+                  background: "#f6ffed",
+                }}
+              >
+                <Statistic
+                  title="Total Present"
+                  value={attendanceDetails.totalPresent}
+                  valueStyle={{ color: "#52c41a", fontSize: "22px", fontWeight: "bold" }}
+                  prefix={<ArrowUpOutlined style={{ fontSize: "24px", color: "#52c41a" }} />}
+                />
+              </Card>
             </Col>
           </Row>
-        </Card>
 
-        {/* Attendance Chart */}
-        <Card bordered={false} style={{ borderRadius: 10, marginTop: 20 }}>
-          <Typography.Title level={4} style={{ textAlign: "center", marginBottom: 20 }}>
-            Attendance Overview
-          </Typography.Title>
-        </Card>
+        </div>
 
         <Row gutter={16} style={{ marginTop: 20 }}>
           <Col span={6}>
