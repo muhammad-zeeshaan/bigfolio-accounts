@@ -3,7 +3,7 @@ import React, { useState, useEffect } from 'react';
 import { Layout, Menu, Breadcrumb, Avatar, Dropdown, Space } from 'antd';
 import { ReactNode } from 'react';
 import { ConfigProvider } from 'antd';
-import { redirect, usePathname, useRouter } from 'next/navigation';
+import { redirect, usePathname } from 'next/navigation';
 import { signOut } from 'next-auth/react';
 import { UserOutlined } from '@ant-design/icons';
 import { SessionUser } from '@/app/types';
@@ -26,7 +26,6 @@ const AdminLayout: React.FC<LayoutProps> = ({ children, session }) => {
         redirect("/signin");
     }
     const pathname = usePathname();
-    const router = useRouter();
     const [isDarkMode, setIsDarkMode] = useState(false);
 
     useEffect(() => {
@@ -40,10 +39,6 @@ const AdminLayout: React.FC<LayoutProps> = ({ children, session }) => {
 
     const handleLogout = () => {
         signOut();
-    };
-
-    const handleAccount = () => {
-        router.push('/account');
     };
 
     const menuItems = [
@@ -64,8 +59,8 @@ const AdminLayout: React.FC<LayoutProps> = ({ children, session }) => {
     console.log(isDarkMode)
     const userMenu = (
         <Menu>
-            <Menu.Item key="account" onClick={handleAccount}>
-                My Account
+            <Menu.Item key="account">
+                <Link href={"/admin/account"}>My Account</Link>
             </Menu.Item>
             <Menu.Item key="logout" onClick={handleLogout}>
                 Logout
