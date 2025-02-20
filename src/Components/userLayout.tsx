@@ -39,14 +39,15 @@ const UserLayout: React.FC<LayoutProps> = ({ children, session }) => {
     const menuItems = [
         { key: 'calendar', label: 'Calendar', href: '/calendar' },
         { key: 'history', label: 'History', href: '/history' },
-        { key: 'app', label: 'App', href: '/calendar' },
     ];
 
-    const breadcrumbItems = [
-        { key: 'calendar', title: 'Calendar', href: '/calendar' },
-        { key: 'app', title: 'App', href: '/' },
-    ];
-
+    const generateBreadcrumbs = () => {
+        const pathSegments = pathname.split('/').filter(Boolean);
+        return pathSegments.map((segment, index) => {
+            const url = `/${pathSegments.slice(0, index + 1).join('/')}`;
+            return { title: <Link href={url}>{segment.charAt(0).toUpperCase() + segment.slice(1)}</Link>, key: url };
+        });
+    };
     const userMenu = (
         <Menu>
             <Menu.Item key="account" onClick={handleAccount}>
@@ -92,7 +93,7 @@ const UserLayout: React.FC<LayoutProps> = ({ children, session }) => {
                     </div>
                 </Header>
                 <Content style={{ padding: '0 50px', marginTop: 64 }}>
-                    <Breadcrumb style={{ margin: '16px 0' }} items={breadcrumbItems} />
+                    <Breadcrumb style={{ margin: '16px 0' }} items={generateBreadcrumbs()} />
                     <div style={{ background: '#fff', padding: 24, minHeight: 380 }}>
                         {children}
                     </div>

@@ -13,12 +13,20 @@ import {
   Avatar,
   Descriptions,
   Statistic,
+  Upload,
+  Form,
+  Input,
+  Modal,
+  message,
 } from "antd";
 import type { Dayjs } from "dayjs";
 import { AttendanceRecord, AttendanceSummary, Employee, ErrorResponse } from "@/app/types";
 import EditAttendanceModal from './editAttendanceModal';
-import { ArrowDownOutlined, ArrowUpOutlined, RetweetOutlined } from '@ant-design/icons';
+import { ArrowDownOutlined, ArrowUpOutlined, ExclamationOutlined, RetweetOutlined } from '@ant-design/icons';
 import { Pie } from "@ant-design/plots";
+import type { UploadChangeParam } from 'antd/es/upload';
+import type { RcFile, UploadFile } from 'antd/es/upload/interface';
+
 interface CalendarCompProps {
   attendanceDetails: AttendanceSummary;
   userData: Employee | ErrorResponse;
@@ -66,13 +74,17 @@ const getListData = (value: Dayjs, attendanceDetails: AttendanceSummary) => {
 const CalendarComp: React.FC<CalendarCompProps> = ({ attendanceDetails, userData }) => {
     const [attendanceData, setAttendanceData] = useState<AttendanceRecord | null>(null);
   const [attendanceModal, setAttendanceModal] = useState<boolean>(false);
+  const [passwordModalVisible, setPasswordModalVisible] = useState<boolean>(false);
+  const [fileList, setFileList] = useState<UploadFile[]>([]);
 
   const onClose = (): void => {
     setAttendanceModal(!attendanceModal);
   };
+
   const isEmployee = (data: Employee | ErrorResponse): data is Employee => {
     return (data as Employee).email !== undefined;
   };
+
   const data = [
     { type: "Overtime Days", value: attendanceDetails.overtimeDays },
     { type: "Total Absents", value: attendanceDetails.totalAbsents },
@@ -89,7 +101,7 @@ const CalendarComp: React.FC<CalendarCompProps> = ({ attendanceDetails, userData
     interactions: [{ type: "element-active" }],
     legend: {
       color: {
-        itemMarker: 'circe',
+        itemMarker: 'circle',
         cols: 3,
         colPadding: 4,
         title: false,
@@ -98,6 +110,7 @@ const CalendarComp: React.FC<CalendarCompProps> = ({ attendanceDetails, userData
       },
     },
   };
+
     const dateCellRender = (value: Dayjs) => {
         const dateKey = `${value.date().toString().padStart(2, "0")}-${(value.month() + 1).toString().padStart(2, "0")}-${value.year()}`;
       const userData = getListData(value, attendanceDetails);
@@ -158,11 +171,28 @@ const CalendarComp: React.FC<CalendarCompProps> = ({ attendanceDetails, userData
         ) : null;
     };
 
+  const handleProfilePhotoChange = (info: UploadChangeParam<UploadFile>) => {
+    let fileList = [...info.fileList];
+    fileList = fileList.slice(-1);
+    setFileList(fileList);
+
+    if (info.file.status === 'done') {
+      message.success(`${info.file.name} file uploaded successfully`);
+    } else if (info.file.status === 'error') {
+      message.error(`${info.file.name} file upload failed.`);
+    }
+  };
+
+  const handlePasswordChange = (values: unknown) => {
+    console.log('Received values of form: ', values);
+    setPasswordModalVisible(false);
+    message.success('Password changed successfully');
+  };
+
     return (
       <>
-        <h1 className="text-2xl font-bold mb-6">Attendance Tracker</h1>
+        <h1 className="text-2xl font-bold mb-6">Profile Page</h1>
         <div className="!my-3">
-          {/* <h1 className="text-2xl font-bold mb-6">Track Your Attendance</h1> */}
           <Row gutter={24} justify="center">
             <Col span={8}>
               <Card
@@ -219,15 +249,28 @@ const CalendarComp: React.FC<CalendarCompProps> = ({ attendanceDetails, userData
               </Card>
             </Col>
           </Row>
-
         </div>
 
         <Row gutter={16} style={{ marginTop: 20 }}>
           <Col span={6}>
             <Card bordered={false} style={{ borderRadius: 10, textAlign: "center" }}>
-              {isEmployee(userData) && <Avatar size={128} src={userData.profileImage} />}
-              {isEmployee(userData) ? (
+              {isEmployee(userData) && (
                 <>
+                  <Upload
+                    fileList={fileList}
+                    onChange={handleProfilePhotoChange}
+                    beforeUpload={(file: RcFile) => {
+                      const isImage = file.type.startsWith('image/');
+                      if (!isImage) {
+                        message.error('You can only upload image files!');
+                      }
+                      return isImage;
+                    }}
+                    showUploadList={false}
+                  >
+                    <Avatar size={128} src={fileList.length > 0 ? URL.createObjectURL(fileList[0].originFileObj as RcFile) : userData.profileImage} />
+                  </Upload>
+
                   <Descriptions title="User Info" column={1} size="small">
                     <Descriptions.Item label="Name">{userData.name}</Descriptions.Item>
                     <Descriptions.Item label="Email">{userData.email}</Descriptions.Item>
@@ -237,11 +280,16 @@ const CalendarComp: React.FC<CalendarCompProps> = ({ attendanceDetails, userData
                     <Descriptions.Item label="Joining Date">{new Date(userData.joiningDate).toLocaleDateString()}</Descriptions.Item>
                     {userData.leavingDate && <Descriptions.Item label="Leaving Date">{new Date(userData.leavingDate).toLocaleDateString()}</Descriptions.Item>}
                   </Descriptions>
+                  <div className='!flex '>
+                    <Button icon={<ExclamationOutlined />} onClick={() => setPasswordModalVisible(true)} style={{ marginTop: 10, zIndex: 990 }}>Change Password</Button>
+
+                  </div>
                   <div className='-mt-10'>
                     <Pie {...config} />
                   </div>
                 </>
-              ) : (
+              )}
+              {!isEmployee(userData) && (
                 <Typography.Text type="danger">{userData.message}</Typography.Text>
               )}
             </Card>
@@ -252,6 +300,52 @@ const CalendarComp: React.FC<CalendarCompProps> = ({ attendanceDetails, userData
             </Card>
           </Col>
         </Row>
+        <Modal
+          title="Change Password"
+          open={passwordModalVisible}
+          onCancel={() => setPasswordModalVisible(false)}
+          footer={null}
+        >
+          <Form onFinish={handlePasswordChange}>
+            <Form.Item
+              name="oldPassword"
+              label="Old Password"
+              rules={[{ required: true, message: 'Please input your old password!' }]}
+            >
+              <Input.Password />
+            </Form.Item>
+            <Form.Item
+              name="newPassword"
+              label="New Password"
+              rules={[{ required: true, message: 'Please input your new password!' }]}
+            >
+              <Input.Password />
+            </Form.Item>
+            <Form.Item
+              name="confirmPassword"
+              label="Confirm New Password"
+              dependencies={['newPassword']}
+              rules={[
+                { required: true, message: 'Please confirm your new password!' },
+                ({ getFieldValue }) => ({
+                  validator(_, value) {
+                    if (!value || getFieldValue('newPassword') === value) {
+                      return Promise.resolve();
+                    }
+                    return Promise.reject(new Error('The two passwords that you entered do not match!'));
+                  },
+                }),
+              ]}
+            >
+              <Input.Password />
+            </Form.Item>
+            <Form.Item>
+              <Button type="primary" htmlType="submit">
+                Change Password
+              </Button>
+            </Form.Item>
+          </Form>
+        </Modal>
       </>
     );
 };
