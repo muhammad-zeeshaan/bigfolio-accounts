@@ -1,12 +1,14 @@
 "use server";
 
-import { Employee, ErrorResponse } from '../types';
+import { Error } from 'mongoose';
+import { Employee, ErrorResponse, MongoError } from '../types';
 import User from '@/models/User';
 
 export async function fetchEmployees(page: number, limit: number): Promise<{ data: Employee[]; currentPage: number; limit: number; totalRecords: number }> {
     try {
         const totalRecords = await User.countDocuments({ role: { $ne: 'admin' } });
         const users = await User.find({ role: { $ne: 'admin' } })
+            .select("-profileImage -documents")
             .skip((page - 1) * limit)
             .limit(limit)
             .lean<Employee[]>();
@@ -66,6 +68,10 @@ export async function addEmployee(newEmployee: Omit<Employee, '_id'>): Promise<E
         };
     } catch (error) {
         console.error("Error adding employee:", error);
+        const mongoError = error as MongoError;
+        if (mongoError.code === 11000 && mongoError.keyPattern?.email) {
+            return { success: false, message: 'User already exists with this email.' };
+        }
         return {
             success: false,
             message: "Error adding employee",

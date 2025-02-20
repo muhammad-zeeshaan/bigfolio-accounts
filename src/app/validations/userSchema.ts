@@ -97,9 +97,14 @@ export const SendInvoiceSchema = z.object({
     email: z.string().min(1, "email is required"),
     invoiceData: InvoiceSchema,
 });
+export const UpdateProfileImageSchema = z.object({
+    employeeId: z.string(),
+    profileImage: z.string(),
+});
 export type addEmployeeType = z.infer<typeof addEmployeeSchema>;
 export type editEmployeeType = z.infer<typeof editEmployeeSchema>;
 export type fetchEmployeesType = z.infer<typeof fetchEmployeesSchema>;
 export type employeeIdType = z.infer<typeof employeeIdSchema>;
 export type SendSalarySlipRequest = z.infer<typeof SendSalarySlipRequestSchema>;
 export type SendInvoiceRequestType = z.infer<typeof SendInvoiceSchema>;
+export type UpdateProfileImageType = z.infer<typeof UpdateProfileImageSchema>;

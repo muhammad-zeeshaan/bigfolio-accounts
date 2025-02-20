@@ -1,3 +1,5 @@
+import { Error } from 'mongoose';
+
 export interface BaseSalaryDetails {
     basicSalary: number;
     allowance: number;
@@ -37,7 +39,7 @@ export interface HistoryDTOWITHOUTID extends BaseSalaryDetails {
 }
 
 export interface ErrorResponse {
-    success: false;
+    success: false | true;
     message: string;
     details?: string;
 }
@@ -119,4 +121,11 @@ export interface InvoiceData {
     dateDue?: Date;
     email?: string;
     dateRange?: [Date, Date];
+}
+export interface MongoError extends Error {
+    code?: number;
+    keyPattern?: {
+        email?: boolean;
+        personalEmail?: boolean;
+    };
 }

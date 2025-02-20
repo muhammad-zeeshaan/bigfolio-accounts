@@ -19,13 +19,15 @@ export default function EmployeeManagement({ employees, totalRecords, limit, cur
 
     // tRPC Mutations
     const addEmployeeMutation = trpc.employee.addEmployee.useMutation({
-        onSuccess: () => {
-            message.success('Employee added successfully.');
-            setIsModalOpen(false);
-            router.refresh();
+        onSuccess: (data) => {
+            if (data) {
+                message.success('Employee added successfully.')
+                setIsModalOpen(false);
+                router.refresh();
+            } 
         },
-        onError: () => {
-            message.error('Failed to add employee.');
+        onError: (error) => {
+            message.error(error.message);
         },
     });
 
@@ -38,6 +40,15 @@ export default function EmployeeManagement({ employees, totalRecords, limit, cur
         },
         onError: () => {
             message.error('Failed to update employee.');
+        },
+    });
+    const fetchEmployeeById = trpc.employee.getEmployeeById.useMutation({
+        onSuccess: (data) => {
+            setSingleEmployee(data as unknown as Employee); // Set fetched employee details in state
+            setIsModalOpen(true);
+        },
+        onError: () => {
+            message.error("Failed to fetch employee details.");
         },
     });
 
@@ -66,8 +77,7 @@ export default function EmployeeManagement({ employees, totalRecords, limit, cur
     };
 
     const handleEdit = (emp: Employee) => {
-        setSingleEmployee(emp);
-        setIsModalOpen(true);
+        fetchEmployeeById.mutate({ id: emp._id });
     };
 
     const handleEditEmployee = async (updatedEmployee: Employee) => {
@@ -77,6 +87,7 @@ export default function EmployeeManagement({ employees, totalRecords, limit, cur
         }
         await editEmployeeMutation.mutateAsync({ ...updatedEmployee, _id: singleEmployee._id });
     };
+
 
     const handleView = (emp: Employee) => {
         setSingleEmployee(emp);
@@ -122,7 +133,7 @@ export default function EmployeeManagement({ employees, totalRecords, limit, cur
                 data={employees}
                 setSelectedRowKeys={setSelectedRowKeys}
                 selectedRowKeys={selectedRowKeys}
-                columns={columns(handleEdit, handleView, handleDelete) as Column<Employee>[]}
+                columns={columns(handleEdit, handleView, handleDelete, fetchEmployeeById.isLoading) as Column<Employee>[]}
                 paginationConfig={{
                     total: totalRecords,
                     current: currentPage,

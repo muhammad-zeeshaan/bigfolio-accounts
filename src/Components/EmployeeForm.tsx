@@ -3,7 +3,8 @@ import React, { useEffect, useState } from "react";
 import { Form, Input, InputNumber, Select, Button, DatePicker, Row, Col, Card, Upload, message, Avatar, Image } from "antd";
 import { Employee } from "@/app/types";
 import dayjs from "dayjs";
-import { PlusOutlined, UploadOutlined, UserOutlined, MailOutlined, PhoneOutlined, DollarOutlined, CalendarOutlined, DeleteOutlined } from '@ant-design/icons';
+import { PlusOutlined, UploadOutlined, UserOutlined, MailOutlined, PhoneOutlined, DollarOutlined, CalendarOutlined, DeleteOutlined, LockOutlined } from '@ant-design/icons';
+import { trpc } from '@/utils/trpcClient';
 
 const roleOptions = [
     { label: "Frontend Developer", value: "frontend_developer" },
@@ -33,6 +34,11 @@ const EmployeeForm: React.FC<FormProps> = ({ employee, onSubmit, loading }) => {
     const [form] = Form.useForm();
     const [imageBase64, setImageBase64] = useState<string | null>(employee?.profileImage || null);
     const [documentImages, setDocumentImages] = useState<string[]>([]);
+    const { mutate: updateProfileImage, isLoading: profileImageLoading } = trpc.employee.updateEmployeeProfileImage.useMutation({
+        onSuccess: () => {
+            message.success("Image uploaded successfully");
+        }
+    })
 
     useEffect(() => {
         if (employee) {
@@ -47,7 +53,7 @@ const EmployeeForm: React.FC<FormProps> = ({ employee, onSubmit, loading }) => {
     }, [employee, form]);
 
     const handleSubmit = (values: Employee) => {
-        onSubmit({ ...values, profileImage: imageBase64 ?? '', documents: documentImages });
+        onSubmit({ ...values });
     };
 
     const handleImageUpload = (file: File) => {
@@ -56,6 +62,10 @@ const EmployeeForm: React.FC<FormProps> = ({ employee, onSubmit, loading }) => {
         reader.onload = () => {
             if (typeof reader.result === "string") {
                 setImageBase64(reader.result);
+                if (employee?._id) {
+                    updateProfileImage({ employeeId: employee?._id ?? '', profileImage: reader.result })
+                    return
+                }
                 message.success("Image uploaded successfully");
             }
         };
@@ -102,6 +112,46 @@ const EmployeeForm: React.FC<FormProps> = ({ employee, onSubmit, loading }) => {
                         </Form.Item>
                     </Col>
                 </Row>
+                {!employee?._id && <Row gutter={16}>
+                    <Col span={12}>
+                        <Form.Item
+                            label="Password"
+                            name="password"
+                            rules={[
+                                {
+                                    required: true,
+                                    message: "Please enter a password!",
+                                    min: 6,
+                                },
+                            ]}
+                        >
+                            <Input.Password prefix={<LockOutlined />} placeholder="Enter your password" />
+                        </Form.Item>
+                    </Col>
+                    <Col span={12}>
+                        <Form.Item
+                            label="Confirm Password"
+                            name="confirmPassword"
+                            dependencies={['password']}
+                            rules={[
+                                {
+                                    required: true,
+                                    message: "Please confirm your password!",
+                                },
+                                ({ getFieldValue }) => ({
+                                    validator(_, value) {
+                                        if (!value || getFieldValue("password") === value) {
+                                            return Promise.resolve();
+                                        }
+                                        return Promise.reject(new Error("Passwords do not match!"));
+                                    },
+                                }),
+                            ]}
+                        >
+                            <Input.Password prefix={<LockOutlined />} placeholder="Confirm your password" />
+                        </Form.Item>
+                    </Col>
+                </Row>}
                 <Form.Item label="Address" name="address" rules={[{ required: true, message: "Please enter address" }]}>
                     <Input.TextArea rows={2} placeholder="Employee Address" />
                 </Form.Item>
@@ -184,7 +234,7 @@ const EmployeeForm: React.FC<FormProps> = ({ employee, onSubmit, loading }) => {
                 </Form.Item>
             </Card>
 
-            <Card title="Profile Image & Documents" style={{ marginBottom: 16 }}>
+            {employee?._id && <Card title="Profile Image & Documents" style={{ marginBottom: 16 }}>
                 <Form.Item label="Profile Image" >
                     <Upload beforeUpload={handleImageUpload} showUploadList={false} accept="image/*">
                         <Button icon={<UploadOutlined />} >
@@ -207,6 +257,7 @@ const EmployeeForm: React.FC<FormProps> = ({ employee, onSubmit, loading }) => {
                                 shape="circle"
                                 icon={<DeleteOutlined />}
                                 size="small"
+                                loading={profileImageLoading}
                                 onClick={() => setImageBase64(null)}
                                 style={{
                                     position: "absolute",
@@ -257,7 +308,7 @@ const EmployeeForm: React.FC<FormProps> = ({ employee, onSubmit, loading }) => {
                         ))}
                     </Row>
                 </Form.Item>
-            </Card>
+            </Card>}
 
             <Form.Item>
                 <Button type="primary" htmlType="submit" loading={loading} className="px-6 py-2">
