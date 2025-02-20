@@ -8,6 +8,7 @@ import { signOut } from 'next-auth/react';
 import { UserOutlined } from '@ant-design/icons';
 import { SessionUser } from '@/app/types';
 import Link from 'next/link';
+import Image from 'next/image';
 
 const { Header, Content, Footer } = Layout;
 
@@ -85,7 +86,7 @@ const AdminLayout: React.FC<LayoutProps> = ({ children, session }) => {
                         <div style={{ display: 'flex', alignItems: 'center' }}>
                             {/* Logo */}
                             <Link href="/">
-                                <img src="/bigfolio-logo.svg" alt="Logo" style={{ height: 40, marginRight: 16 }} />
+                                <Image src="/public/bigfolio-logo.svg" alt="Logo" style={{ height: 40, marginRight: 16 }} />
                             </Link>
                             <Menu
                                 theme="dark"

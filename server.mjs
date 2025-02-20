@@ -31,7 +31,8 @@ app.prepare().then(async () => {
     console.log(`Connected to MongoDB: ${connection.name} ${process.env.DATABASE_URL}`);
 
     server.set("trust proxy", 1);
-    server.use(express.static('public'));
+    server.use('/public', express.static('public'));
+
     server.all("*", nextCallback);
     server.all("/_next/webpack-hmr", (req, res) => {
         nextCallback(req, res);
