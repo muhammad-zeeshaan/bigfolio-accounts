@@ -103,9 +103,9 @@ const Invoice: React.FC = () => {
     console.log({ invoiceData })
     return (
         <div>
-            {/* <Button loading={isLoading} onClick={() => {
+            <Button className='!hidden' loading={isLoading} onClick={() => {
                 mutate({ email: 'asad@bigfolio.co', invoiceData })
-            }}>Send invoice</Button> */}
+            }}>Send invoice</Button>
             <h1 className="text-2xl font-bold mb-6">Client Invoice</h1>
             <Layout hasSider>
                 <Sider style={siderStyle} theme="light" width={400}>
