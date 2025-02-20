@@ -310,8 +310,8 @@ const Invoice: React.FC = () => {
                                 {/* Header */}
                                 <div className="flex justify-between items-start">
                                     <div className="flex items-center gap-x-[5px]">
-                                        <img src="/bigfolio-logo.svg" alt="Bigfolio Logo" className="w-[22px] h-[30px]" />
-                                        <img src="/bigfolio-text.svg" alt="Bigfolio Logo" className="w-[83.37px] h-[24.58px]" />
+                                        <img src="/public/bigfolio-logo.svg" alt="Bigfolio Logo" className="w-[22px] h-[30px]" />
+                                        <img src="/public/bigfolio-text.svg" alt="Bigfolio Logo" className="w-[83.37px] h-[24.58px]" />
                                     </div>
                                     <div className="text-right">
                                         <h2 className="text-2xl font-semibold">Invoice #{invoiceData.invoiceNumber}</h2>
