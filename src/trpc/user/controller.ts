@@ -70,7 +70,7 @@ export async function editEmployee(updatedEmployee: editEmployeeType): Promise<E
   try {
     const updatedUser = await User.findByIdAndUpdate(updatedEmployee._id, updatedEmployee, {
       new: true,
-    }).lean<Employee>();
+    }).select("-profileImage -documents").lean<Employee>();
 
     if (!updatedUser) {
       throw new TRPCError({
@@ -92,7 +92,7 @@ export async function editEmployee(updatedEmployee: editEmployeeType): Promise<E
 
 export async function deleteEmployee(employeeId: string): Promise<Employee> {
   try {
-    const result = await User.findByIdAndDelete(employeeId).lean<Employee>();
+    const result = await User.findByIdAndDelete(employeeId).select("-profileImage -documents").lean<Employee>();
 
     if (!result) {
       throw new TRPCError({
@@ -133,6 +133,32 @@ export async function updateEmployeeProfileImage(employeeId: string, profileImag
     throw new TRPCError({
       code: "INTERNAL_SERVER_ERROR",
       message: "Error updating profile image",
+      cause: error,
+    });
+  }
+}
+
+export async function updateEmployeeDocuments(employeeId: string, documents: string[]): Promise<{ success: boolean; message: string }> {
+  try {
+    const updatedUser = await User.findByIdAndUpdate(
+      employeeId,
+      { documents },
+      { new: true }
+    ).lean<Employee>();
+
+    if (!updatedUser) {
+      throw new TRPCError({
+        code: "NOT_FOUND",
+        message: "Employee not found for documents update",
+      });
+    }
+
+    return { success: true, message: "documents updated successfully" };
+  } catch (error) {
+    console.error("Error updating documents:", error);
+    throw new TRPCError({
+      code: "INTERNAL_SERVER_ERROR",
+      message: "Error updating documents",
       cause: error,
     });
   }
