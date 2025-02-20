@@ -128,6 +128,19 @@ export default function SignUpPage(): JSX.Element {
                         >
                             <Input prefix={<MailOutlined />} placeholder="Enter your email" />
                         </Form.Item>
+                        <Form.Item
+                            label="Personal Email"
+                            name="personalEmail"
+                            rules={[
+                                {
+                                    required: true,
+                                    message: "Please enter a valid email!",
+                                    type: "email",
+                                },
+                            ]}
+                        >
+                            <Input prefix={<MailOutlined />} placeholder="Enter your personal email" />
+                        </Form.Item>
 
                         <Form.Item
                             label="Phone"
@@ -138,7 +151,7 @@ export default function SignUpPage(): JSX.Element {
                                     message: "Please enter your phone number!",
                                 },
                                 {
-                                    pattern: /^[0-9]{10}$/,
+                                    pattern: /^[0-9]{11}$/,
                                     message: "Please enter a valid phone number with 10 digits.",
                                 },
                             ]}

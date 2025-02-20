@@ -89,6 +89,7 @@ export interface SignUpFormData {
     password: string;
     confirmPassword: string;
     name: string;
+    personalEmail: string;
 }
 export interface InvoiceItem {
     ticket: string;

@@ -86,7 +86,7 @@ const AdminLayout: React.FC<LayoutProps> = ({ children, session }) => {
                         <div style={{ display: 'flex', alignItems: 'center' }}>
                             {/* Logo */}
                             <Link href="/">
-                                <Image src="/public/Bigfolio-logo.svg" alt="Logo" style={{ height: 40, marginRight: 16 }} />
+                                <Image src="/public/Bigfolio-logo.svg" width={30} height={40} alt="Logo" style={{ marginRight: 16 }} />
                             </Link>
                             <Menu
                                 theme="dark"

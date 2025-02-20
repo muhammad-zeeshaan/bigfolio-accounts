@@ -32,6 +32,7 @@ export const signUp = async (formData: SignUpFormData): Promise<SignUpResponse> 
         phone: formData.phone,
         basicSalary: 0,
         salaryStatus: "Pending",
+        personalEmail: formData.personalEmail
     };
 
     try {
