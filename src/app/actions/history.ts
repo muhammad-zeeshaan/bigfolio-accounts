@@ -60,7 +60,8 @@ export async function fetchHistory(
             .populate({
                 path: "user",
                 model: "User",
-                match: userMatch
+                match: userMatch,
+                select: "-profileImage -documents"
             })
             .skip((page - 1) * limit)
             .limit(limit)
