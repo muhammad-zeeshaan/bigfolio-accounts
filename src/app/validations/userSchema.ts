@@ -101,6 +101,19 @@ export const UpdateProfileImageSchema = z.object({
     employeeId: z.string(),
     profileImage: z.string(),
 });
+export const UpdateDocumentsSchema = z.object({
+    employeeId: z.string(),
+    documents: z.array(z.string()),
+});
+export const AddDocumentSchema = z.object({
+    employeeId: z.string(),
+    document: z.string(),
+});
+
+export const DeleteDocumentSchema = z.object({
+    employeeId: z.string(),
+    document: z.string(),
+});
 export type addEmployeeType = z.infer<typeof addEmployeeSchema>;
 export type editEmployeeType = z.infer<typeof editEmployeeSchema>;
 export type fetchEmployeesType = z.infer<typeof fetchEmployeesSchema>;

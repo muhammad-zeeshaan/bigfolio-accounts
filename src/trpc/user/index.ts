@@ -1,4 +1,4 @@
-import { addEmployeeSchema, editEmployeeSchema, employeeIdSchema, fetchEmployeesSchema, SendInvoiceSchema, SendSalarySlipRequestSchema, UpdateProfileImageSchema } from '@/app/validations/userSchema';
+import { AddDocumentSchema, addEmployeeSchema, DeleteDocumentSchema, editEmployeeSchema, employeeIdSchema, fetchEmployeesSchema, SendInvoiceSchema, SendSalarySlipRequestSchema, UpdateDocumentsSchema, UpdateProfileImageSchema } from '@/app/validations/userSchema';
 import { protectedProcedure, router,publicProcedure } from "../init";
 import {
     fetchEmployees,
@@ -6,7 +6,10 @@ import {
     addEmployee,
     editEmployee,
     deleteEmployee,
-    updateEmployeeProfileImage
+    updateEmployeeProfileImage,
+    updateEmployeeDocuments,
+    addEmployeeDocument,
+    deleteEmployeeDocument
 } from "./controller";
 import { SendInvoice, SendSalarySlip } from '@/app/actions/sendPDF';
 
@@ -37,6 +40,17 @@ const employeeRouter = router({
     updateEmployeeProfileImage: protectedProcedure
         .input(UpdateProfileImageSchema)
         .mutation(({ input }) => updateEmployeeProfileImage(input.employeeId, input.profileImage)),
+    updateEmployeeDocuments: protectedProcedure
+        .input(UpdateDocumentsSchema)
+        .mutation(({ input }) => updateEmployeeDocuments(input.employeeId, input.documents)),
+    addEmployeeDocument: protectedProcedure
+        .input(AddDocumentSchema)
+        .mutation(({ input }) => addEmployeeDocument(input.employeeId, input.document)),
+
+    deleteEmployeeDocument: protectedProcedure
+        .input(DeleteDocumentSchema)
+        .mutation(({ input }) => deleteEmployeeDocument(input.employeeId, input.document)),
+
 });
 
 export default employeeRouter;

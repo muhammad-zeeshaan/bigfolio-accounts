@@ -1,9 +1,9 @@
 "use client";
 import React, { useEffect, useState } from "react";
-import { Form, Input, InputNumber, Select, Button, DatePicker, Row, Col, Card, Upload, message, Avatar, Image } from "antd";
+import { Form, Input, InputNumber, Select, Button, DatePicker, Row, Col, Card, Upload, message, Image } from "antd";
 import { Employee } from "@/app/types";
 import dayjs from "dayjs";
-import { PlusOutlined, UploadOutlined, UserOutlined, MailOutlined, PhoneOutlined, DollarOutlined, CalendarOutlined, DeleteOutlined, LockOutlined } from '@ant-design/icons';
+import { PlusOutlined, UploadOutlined, UserOutlined, MailOutlined, PhoneOutlined, DollarOutlined, CalendarOutlined, DeleteOutlined, LockOutlined, LoadingOutlined } from '@ant-design/icons';
 import { trpc } from '@/utils/trpcClient';
 
 const roleOptions = [
@@ -40,6 +40,24 @@ const EmployeeForm: React.FC<FormProps> = ({ employee, onSubmit, loading }) => {
         }
     })
 
+    const { mutate: addDocument, isLoading: addDocumentLoading } = trpc.employee.addEmployeeDocument.useMutation({
+        onSuccess: () => {
+            message.success("Document added successfully");
+        },
+        onError: (error) => {
+            message.error(error.message);
+        }
+    });
+
+    const { mutate: deleteDocument, isLoading: deleteDocumentLoading } = trpc.employee.deleteEmployeeDocument.useMutation({
+        onSuccess: () => {
+            message.success("Document deleted successfully");
+        },
+        onError: (error) => {
+            message.error(error.message);
+        }
+    });
+
     useEffect(() => {
         if (employee) {
             form.setFieldsValue({
@@ -73,16 +91,40 @@ const EmployeeForm: React.FC<FormProps> = ({ employee, onSubmit, loading }) => {
             console.error("Image upload error:", error);
             message.error("Failed to upload image");
         };
-        return false; // Prevent upload to a server
+        return false; 
     };
 
-    const handleDocumentUpload = (file: File) => {
+    const handleAddDocument = async (file: File) => {
         const reader = new FileReader();
         reader.readAsDataURL(file);
+
         reader.onload = () => {
-            setDocumentImages(prev => [...prev, reader.result as string]);
+            if (typeof reader.result === "string") {
+                const base64Document = reader.result;
+
+                if (employee?._id) {
+                    addDocument({ employeeId: employee._id, document: base64Document });
+                    setDocumentImages((prev) => [...prev, base64Document])
+                }
+            }
         };
-        return false;
+
+        reader.onerror = (error) => {
+            console.error("Document upload error:", error);
+            message.error("Failed to upload document");
+        };
+    };
+
+    const handleRemoveImage = (index: number) => {
+        setDocumentImages(prev => {
+            const updatedImages = prev.filter((_, i) => i !== index);
+
+            if (employee?._id) {
+                deleteDocument({ employeeId: employee._id, document: documentImages[index] });
+            }
+
+            return updatedImages;
+        });
     };
 
     return (
@@ -234,7 +276,7 @@ const EmployeeForm: React.FC<FormProps> = ({ employee, onSubmit, loading }) => {
                 </Form.Item>
             </Card>
 
-            {employee?._id && <Card title="Profile Image & Documents" style={{ marginBottom: 16 }}>
+            {true && <Card title="Profile Image & Documents" style={{ marginBottom: 16 }}>
                 <Form.Item label="Profile Image" >
                     <Upload beforeUpload={handleImageUpload} showUploadList={false} accept="image/*">
                         <Button icon={<UploadOutlined />} >
@@ -274,36 +316,57 @@ const EmployeeForm: React.FC<FormProps> = ({ employee, onSubmit, loading }) => {
 
 
                 <Form.Item label="Documents (Multiple Images)">
-                    <Upload beforeUpload={handleDocumentUpload} listType="picture-card" accept="image/*">
+                    <Upload
+                        beforeUpload={handleAddDocument}
+                        listType="picture-card"
+                        accept="image/*"
+                        showUploadList={false} // Hide default Ant Design upload list
+                    >
                         <div>
-                            <PlusOutlined />
+                            {addDocumentLoading ? <LoadingOutlined style={{ fontSize: 24 }} /> : <PlusOutlined />}
                             <div style={{ marginTop: 8 }}>Upload</div>
                         </div>
                     </Upload>
-                    <Row gutter={[12, 12]} className='pt-2' justify="center">
+
+                    <Row gutter={[12, 12]} className="pt-5" justify="start">
                         {documentImages.map((img, index) => (
                             <Col key={index} xs={12} sm={8} md={6} lg={4}>
-                                <Card
-                                    hoverable
+                                <div
                                     style={{
                                         display: "flex",
-                                        justifyContent: "center",
+                                        flexDirection: "column",
                                         alignItems: "center",
-                                        padding: 10,
-                                        borderRadius: 8,
-                                        boxShadow: "0 4px 8px rgba(0,0,0,0.1)",
+                                        position: "relative",
+                                        overflow: "hidden",
+                                        transition: "transform 0.3s, box-shadow 0.3s",
                                     }}
                                 >
-                                    <Avatar
+                                    <Image
                                         src={img}
-                                        size={90}
-                                        shape="square"
                                         style={{
                                             transition: "transform 0.3s",
                                         }}
-
+                                        className='object-cover'
                                     />
-                                </Card>
+                                    <Button
+                                        type="primary"
+                                        danger
+                                        shape="circle"
+                                        icon={<DeleteOutlined />}
+                                        size="small"
+                                        loading={deleteDocumentLoading}
+                                        onClick={() => handleRemoveImage(index)}
+                                        style={{
+                                            position: "absolute",
+                                            top: -1,
+                                            right: -10,
+                                            boxShadow: "0 2px 6px rgba(0,0,0,0.2)",
+                                            backgroundColor: "#ff4d4f",
+                                            border: '2px solid white',
+                                            zIndex: 99999999
+                                        }}
+                                    />
+                                </div>
                             </Col>
                         ))}
                     </Row>

@@ -105,12 +105,18 @@ const AdminLayout: React.FC<LayoutProps> = ({ children, session }) => {
                         </Dropdown>
                     </div>
                 </Header>
-                <Content style={{ padding: '0 50px', marginTop: 64 }}>
+                <Content className="px-[2px] md:px-12 pt-8 md:pt-16">
+                    <Breadcrumb className="!my-4" items={generateBreadcrumbs()} />
+                    <div className="p-4 sm:p-6  min-h-screen">
+                        {children}
+                    </div>
+                </Content>
+                {/* <Content style={{ padding: '0 50px', marginTop: 64 }}>
                     <Breadcrumb style={{ margin: '16px 0' }} items={generateBreadcrumbs()} />
                     <div style={{ padding: 24, minHeight: 380 }}>
                         {children}
                     </div>
-                </Content>
+                </Content> */}
                 <Footer style={{ textAlign: 'center' }}>
                     Bigfolio accounts ©2025 Created by Bigfolio LLC
                 </Footer>

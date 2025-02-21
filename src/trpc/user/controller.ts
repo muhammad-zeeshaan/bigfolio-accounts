@@ -163,3 +163,54 @@ export async function updateEmployeeDocuments(employeeId: string, documents: str
     });
   }
 }
+export async function addEmployeeDocument(employeeId: string, document: string): Promise<{ success: boolean; message: string }> {
+  try {
+    const updatedUser = await User.findByIdAndUpdate(
+      employeeId,
+      { $push: { documents: document } }, // Add document
+      { new: true }
+    ).lean();
+
+    if (!updatedUser) {
+      throw new TRPCError({
+        code: "NOT_FOUND",
+        message: "Employee not found for document addition",
+      });
+    }
+
+    return { success: true, message: "Document added successfully" };
+  } catch (error) {
+    console.error("Error adding document:", error);
+    throw new TRPCError({
+      code: "INTERNAL_SERVER_ERROR",
+      message: "Error adding document",
+      cause: error,
+    });
+  }
+}
+
+export async function deleteEmployeeDocument(employeeId: string, document: string): Promise<{ success: boolean; message: string }> {
+  try {
+    const updatedUser = await User.findByIdAndUpdate(
+      employeeId,
+      { $pull: { documents: document } }, // Remove document
+      { new: true }
+    ).lean();
+
+    if (!updatedUser) {
+      throw new TRPCError({
+        code: "NOT_FOUND",
+        message: "Employee not found for document deletion",
+      });
+    }
+
+    return { success: true, message: "Document deleted successfully" };
+  } catch (error) {
+    console.error("Error deleting document:", error);
+    throw new TRPCError({
+      code: "INTERNAL_SERVER_ERROR",
+      message: "Error deleting document",
+      cause: error,
+    });
+  }
+}

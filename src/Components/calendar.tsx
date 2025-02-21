@@ -9,7 +9,6 @@ import {
     Row,
     Col,
     Typography,
-    Space,
     Popover,
     List,
 } from "antd";
@@ -179,12 +178,12 @@ const CalendarComp: React.FC<CalendarCompProps> = ({ attendanceDetails }) => {
 
     return (
         <Card bordered={false}>
-            <Row justify="space-between" align="middle" style={{ marginBottom: 16 }}>
+            <Row justify="space-between" align="middle" className="mb-4">
                 <Col>
-                    <h1 className="text-2xl font-bold mb-6">Track Your Attendance</h1>
+                    <h1 className="text-xl sm:text-2xl font-bold mb-4">Track Your Attendance</h1>
                 </Col>
-                <Col>
-                    <Space>
+                <Col xs={24} sm={12} >
+                    <div className="grid grid-cols-2 gap-2 sm:flex md:justify-end sm:space-x-2">
                         <Button type="primary" loading={checkInMutation.isLoading} icon={<CheckCircleOutlined />} onClick={() => checkInMutation.mutate({ userId })}>
                             Check In
                         </Button>
@@ -197,9 +196,10 @@ const CalendarComp: React.FC<CalendarCompProps> = ({ attendanceDetails }) => {
                         <Button type="primary" danger loading={checkOutMutation.isLoading} icon={<LogoutOutlined />} onClick={() => checkOutMutation.mutate({ userId })}>
                             Check Out
                         </Button>
-                    </Space>
+                    </div>
                 </Col>
             </Row>
+
             <Calendar cellRender={dateCellRender} />
         </Card>
     );

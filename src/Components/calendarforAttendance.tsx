@@ -22,7 +22,7 @@ import {
 import type { Dayjs } from "dayjs";
 import { AttendanceRecord, AttendanceSummary, Employee, ErrorResponse } from "@/app/types";
 import EditAttendanceModal from './editAttendanceModal';
-import { ArrowDownOutlined, ArrowUpOutlined, ExclamationOutlined, RetweetOutlined } from '@ant-design/icons';
+import { ArrowDownOutlined, ArrowUpOutlined, EditOutlined, RetweetOutlined } from '@ant-design/icons';
 import { Pie } from "@ant-design/plots";
 import type { UploadChangeParam } from 'antd/es/upload';
 import type { RcFile, UploadFile } from 'antd/es/upload/interface';
@@ -191,79 +191,40 @@ const CalendarComp: React.FC<CalendarCompProps> = ({ attendanceDetails, userData
 
     return (
       <>
-        <h1 className="text-2xl font-bold mb-6">Profile Page</h1>
+        <h1 className="text-xl sm:text-2xl font-bold mb-4 sm:mb-6">Profile Page</h1>
         <div className="!my-3">
-          <Row gutter={24} justify="center">
-            <Col span={8}>
-              <Card
-                bordered={false}
-                style={{
-                  borderRadius: "12px",
-                  boxShadow: "0 4px 10px rgba(0, 0, 0, 0.1)",
-                  textAlign: "center",
-                  background: "#e6f7ff",
-                }}
-              >
-                <Statistic
-                  title="Overtime Days"
-                  value={attendanceDetails.overtimeDays}
-                  valueStyle={{ color: "#1890ff", fontSize: "22px", fontWeight: "bold" }}
-                  prefix={<RetweetOutlined style={{ fontSize: "24px", color: "#1890ff" }} />}
-                />
-              </Card>
-            </Col>
-            <Col span={8}>
-              <Card
-                bordered={false}
-                style={{
-                  borderRadius: "12px",
-                  boxShadow: "0 4px 10px rgba(0, 0, 0, 0.1)",
-                  textAlign: "center",
-                  background: "#fff1f0",
-                }}
-              >
-                <Statistic
-                  title="Total Absents"
-                  value={attendanceDetails.totalAbsents}
-                  valueStyle={{ color: "#ff4d4f", fontSize: "22px", fontWeight: "bold" }}
-                  prefix={<ArrowDownOutlined style={{ fontSize: "24px", color: "#ff4d4f" }} />}
-                />
-              </Card>
-            </Col>
-            <Col span={8}>
-              <Card
-                bordered={false}
-                style={{
-                  borderRadius: "12px",
-                  boxShadow: "0 4px 10px rgba(0, 0, 0, 0.1)",
-                  textAlign: "center",
-                  background: "#f6ffed",
-                }}
-              >
-                <Statistic
-                  title="Total Present"
-                  value={attendanceDetails.totalPresent}
-                  valueStyle={{ color: "#52c41a", fontSize: "22px", fontWeight: "bold" }}
-                  prefix={<ArrowUpOutlined style={{ fontSize: "24px", color: "#52c41a" }} />}
-                />
-              </Card>
-            </Col>
+          <Row gutter={[16, 16]} justify="center">
+            {[
+              { title: "Overtime Days", value: attendanceDetails.overtimeDays, color: "#1890ff", bg: "#e6f7ff", icon: <RetweetOutlined style={{ fontSize: "24px", color: "#1890ff" }} /> },
+              { title: "Total Absents", value: attendanceDetails.totalAbsents, color: "#ff4d4f", bg: "#fff1f0", icon: <ArrowDownOutlined style={{ fontSize: "24px", color: "#ff4d4f" }} /> },
+              { title: "Total Present", value: attendanceDetails.totalPresent, color: "#52c41a", bg: "#f6ffed", icon: <ArrowUpOutlined style={{ fontSize: "24px", color: "#52c41a" }} /> },
+            ].map((stat, index) => (
+              <Col xs={index !== 2 ? 12 : 24} sm={12} md={8} key={index}>
+                <Card bordered={false} className="rounded-lg shadow-md text-center" style={{ background: stat.bg }}>
+                  <Statistic
+                    title={stat.title}
+                    value={stat.value}
+                    valueStyle={{ color: stat.color, fontSize: "22px", fontWeight: "bold" }}
+                    prefix={stat.icon}
+                  />
+                </Card>
+              </Col>
+            ))}
           </Row>
+
         </div>
 
-        <Row gutter={16} style={{ marginTop: 20 }}>
-          <Col span={6}>
-            <Card bordered={false} style={{ borderRadius: 10, textAlign: "center" }}>
-              {isEmployee(userData) && (
+        <Row gutter={[16, 16]} className="mt-4">
+          <Col xs={24} md={12} lg={6}>
+            <Card bordered={false} className="rounded-lg text-center">
+              {isEmployee(userData) ? (
                 <>
                   <Upload
                     fileList={fileList}
                     onChange={handleProfilePhotoChange}
                     beforeUpload={(file: RcFile) => {
-                      const isImage = file.type.startsWith('image/');
-                      if (!isImage) {
-                        message.error('You can only upload image files!');
-                      }
+                      const isImage = file.type.startsWith("image/");
+                      if (!isImage) message.error("You can only upload image files!");
                       return isImage;
                     }}
                     showUploadList={false}
@@ -280,59 +241,48 @@ const CalendarComp: React.FC<CalendarCompProps> = ({ attendanceDetails, userData
                     <Descriptions.Item label="Joining Date">{new Date(userData.joiningDate).toLocaleDateString()}</Descriptions.Item>
                     {userData.leavingDate && <Descriptions.Item label="Leaving Date">{new Date(userData.leavingDate).toLocaleDateString()}</Descriptions.Item>}
                   </Descriptions>
-                  <div className='!flex '>
-                    <Button icon={<ExclamationOutlined />} onClick={() => setPasswordModalVisible(true)} style={{ marginTop: 10, zIndex: 990 }}>Change Password</Button>
-
+                  <div className="flex flex-wrap justify-start gap-2 mt-4">
+                    <Button icon={<EditOutlined />} onClick={() => setPasswordModalVisible(true)} className="z-50">
+                      Change Password
+                    </Button>
                   </div>
-                  <div className='-mt-10'>
+                  <div className="mt-6">
                     <Pie {...config} />
                   </div>
                 </>
-              )}
-              {!isEmployee(userData) && (
+              ) : (
                 <Typography.Text type="danger">{userData.message}</Typography.Text>
               )}
             </Card>
           </Col>
-          <Col span={18}>
-            <Card bordered={false} style={{ borderRadius: 10 }}>
+
+          <Col xs={24} md={12} lg={18}>
+            <Card bordered={false} className="rounded-lg">
               <Calendar cellRender={dateCellRender} />
             </Card>
           </Col>
         </Row>
-        <Modal
-          title="Change Password"
-          open={passwordModalVisible}
-          onCancel={() => setPasswordModalVisible(false)}
-          footer={null}
-        >
+
+        <Modal title="Change Password" open={passwordModalVisible} onCancel={() => setPasswordModalVisible(false)} footer={null}>
           <Form onFinish={handlePasswordChange}>
-            <Form.Item
-              name="oldPassword"
-              label="Old Password"
-              rules={[{ required: true, message: 'Please input your old password!' }]}
-            >
+            <Form.Item name="oldPassword" label="Old Password" rules={[{ required: true, message: "Please input your old password!" }]}>
               <Input.Password />
             </Form.Item>
-            <Form.Item
-              name="newPassword"
-              label="New Password"
-              rules={[{ required: true, message: 'Please input your new password!' }]}
-            >
+            <Form.Item name="newPassword" label="New Password" rules={[{ required: true, message: "Please input your new password!" }]}>
               <Input.Password />
             </Form.Item>
             <Form.Item
               name="confirmPassword"
               label="Confirm New Password"
-              dependencies={['newPassword']}
+              dependencies={["newPassword"]}
               rules={[
-                { required: true, message: 'Please confirm your new password!' },
+                { required: true, message: "Please confirm your new password!" },
                 ({ getFieldValue }) => ({
                   validator(_, value) {
-                    if (!value || getFieldValue('newPassword') === value) {
+                    if (!value || getFieldValue("newPassword") === value) {
                       return Promise.resolve();
                     }
-                    return Promise.reject(new Error('The two passwords that you entered do not match!'));
+                    return Promise.reject(new Error("The two passwords that you entered do not match!"));
                   },
                 }),
               ]}
@@ -347,6 +297,7 @@ const CalendarComp: React.FC<CalendarCompProps> = ({ attendanceDetails, userData
           </Form>
         </Modal>
       </>
+
     );
 };
 

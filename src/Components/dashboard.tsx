@@ -45,7 +45,7 @@ const DashboardPage = () => {
             <h1 className="text-2xl font-bold mb-6">Admin Dashboard</h1>
 
             <Row gutter={[16, 16]} className="mb-6">
-                <Col xs={24} sm={12} md={6}>
+                <Col xs={12} sm={12} md={6}>
                     <Card>
                         <Statistic
                             title="Total Employees"
@@ -55,7 +55,7 @@ const DashboardPage = () => {
                         />
                     </Card>
                 </Col>
-                <Col xs={24} sm={12} md={6}>
+                <Col xs={12} sm={12} md={6}>
                     <Card>
                         <Statistic
                             title="Present Today"
@@ -65,7 +65,7 @@ const DashboardPage = () => {
                         />
                     </Card>
                 </Col>
-                <Col xs={24} sm={12} md={6}>
+                <Col xs={12} sm={12} md={6}>
                     <Card>
                         <Statistic
                             title="Absent Today"
@@ -75,7 +75,7 @@ const DashboardPage = () => {
                         />
                     </Card>
                 </Col>
-                <Col xs={24} sm={12} md={6}>
+                <Col xs={12} sm={12} md={6}>
                     <Card>
                         <Statistic
                             title="Salary Slips Sent"
