@@ -4,6 +4,7 @@ import { TRPCError } from "@trpc/server";
 import { Employee } from "@/app/types";
 import { addEmployeeType, editEmployeeType } from "@/app/validations/userSchema";
 import User from "@/models/User";
+import Attendance from '@/models/Attendance';
 
 export async function fetchEmployees(
   page: number,
@@ -196,7 +197,7 @@ export async function deleteEmployeeDocument(employeeId: string, document: strin
       { $pull: { documents: document } }, // Remove document
       { new: true }
     ).lean();
-
+    await Attendance.deleteMany({ userId: employeeId })
     if (!updatedUser) {
       throw new TRPCError({
         code: "NOT_FOUND",
