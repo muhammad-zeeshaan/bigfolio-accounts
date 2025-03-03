@@ -35,7 +35,6 @@ export const checkIn = async (userId: string) => {
     }
 };
 export const getMonthlyAttendance = async (year: number, month: number): Promise<AttendanceByDay> => {
-
     const session = await loadSession();
     if (!session) {
         throw new Error('You must be logged in to view attendance records');
@@ -51,10 +50,12 @@ export const getMonthlyAttendance = async (year: number, month: number): Promise
                 $lte: endDate,
             },
         };
+
         const currentUser = session.user as SessionUser;
         if (currentUser?.role !== 'admin') {
             query.userId = new mongoose.Types.ObjectId(currentUser?.id);
         }
+
         const attendanceRecords = await Attendance.find(query)
             .populate({
                 path: 'userId',
@@ -62,15 +63,20 @@ export const getMonthlyAttendance = async (year: number, month: number): Promise
                 select: 'name',
             })
             .lean();
-
         const attendanceByDay: AttendanceByDay = {};
 
         attendanceRecords.forEach((record) => {
+            if (!record.userId) {
+                return; // Skip this record
+            }
+
             const day = new Date(record.date);
             const dateKey = `${day.getDate().toString().padStart(2, '0')}-${(day.getMonth() + 1).toString().padStart(2, '0')}-${day.getFullYear()}`;
+
             if (!attendanceByDay[dateKey]) {
                 attendanceByDay[dateKey] = [];
             }
+
             attendanceByDay[dateKey].push({
                 _id: String(record?._id),
                 userId: record.userId._id as string,
@@ -80,12 +86,14 @@ export const getMonthlyAttendance = async (year: number, month: number): Promise
                 breaks: record.breaks || [],
             });
         });
+
         return attendanceByDay;
     } catch (error) {
         console.error('Error fetching attendance records:', error);
-        return {}
+        return {};
     }
 };
+
 export const getMonthlyUserAttendance = async (
     year: number,
     month: number,
@@ -229,18 +237,19 @@ export const startBreak = async (userId: string) => {
         if (!attendance) {
             return { message: 'You have not checked in today!', attendance: null };
         }
-
-        // Check if the user is already on a break
-        const lastBreak = attendance.breaks[attendance.breaks.length - 1];
-        if (lastBreak && !lastBreak.breakEnd) {
-            return { message: 'You are already on a break!', attendance: attendance.toObject() }; // Convert to plain object
+        if (attendance.checkOutTime) {
+            return { message: 'You have already checked out! Cannot start a break.', attendance: attendance.toObject() };
         }
 
-        // Start a new break
+        const lastBreak = attendance.breaks[attendance.breaks.length - 1];
+        if (lastBreak && !lastBreak.breakEnd) {
+            return { message: 'You are already on a break!', attendance: attendance.toObject() };
+        }
+
         attendance.breaks.push({ breakStart: new Date() });
         await attendance.save();
 
-        return { message: 'Break started successfully', attendance: attendance.toObject() }; // Convert to plain object
+        return { message: 'Break started successfully', attendance: attendance.toObject() };
     } catch (error) {
         console.error('Error starting break:', error);
         return { message: 'Error starting break', attendance: null };

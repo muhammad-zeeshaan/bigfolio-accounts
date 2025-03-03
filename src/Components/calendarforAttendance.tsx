@@ -26,6 +26,7 @@ import { ArrowDownOutlined, ArrowUpOutlined, EditOutlined, RetweetOutlined } fro
 import { Pie } from "@ant-design/plots";
 import type { UploadChangeParam } from 'antd/es/upload';
 import type { RcFile, UploadFile } from 'antd/es/upload/interface';
+import useQueryParams from "@/app/hooks/useQueryParams";
 
 interface CalendarCompProps {
   attendanceDetails: AttendanceSummary;
@@ -72,7 +73,8 @@ const getListData = (value: Dayjs, attendanceDetails: AttendanceSummary) => {
 };
 
 const CalendarComp: React.FC<CalendarCompProps> = ({ attendanceDetails, userData }) => {
-    const [attendanceData, setAttendanceData] = useState<AttendanceRecord | null>(null);
+  const params = useQueryParams();
+  const [attendanceData, setAttendanceData] = useState<AttendanceRecord | null>(null);
   const [attendanceModal, setAttendanceModal] = useState<boolean>(false);
   const [passwordModalVisible, setPasswordModalVisible] = useState<boolean>(false);
   const [fileList, setFileList] = useState<UploadFile[]>([]);
@@ -189,6 +191,14 @@ const CalendarComp: React.FC<CalendarCompProps> = ({ attendanceDetails, userData
     message.success('Password changed successfully');
   };
 
+  const onPanelChange = (value: Dayjs) => {
+          const year = value.year(); 
+          const month = value.month() + 1;
+          params.set('year', year ?? '');
+          params.set('month', month ?? '');
+          params.update();
+      };
+
     return (
       <>
         <h1 className="text-xl sm:text-2xl font-bold mb-4 sm:mb-6">Profile Page</h1>
@@ -258,7 +268,7 @@ const CalendarComp: React.FC<CalendarCompProps> = ({ attendanceDetails, userData
 
           <Col xs={24} md={12} lg={18}>
             <Card bordered={false} className="rounded-lg">
-              <Calendar cellRender={dateCellRender} />
+              <Calendar cellRender={dateCellRender} onPanelChange={onPanelChange} />
             </Card>
           </Col>
         </Row>

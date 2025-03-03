@@ -149,6 +149,9 @@ export const startBreak = async (input: StartBreakType) => {
     if (!attendance) {
       return { message: 'You have not checked in today!', attendance: null };
     }
+    if (attendance.checkOutTime) {
+      return { message: 'You have already checked out! Cannot start a break.', attendance: null };
+  }
 
     const lastBreak = attendance.breaks[attendance.breaks.length - 1];
     if (lastBreak && !lastBreak.breakEnd) {

@@ -23,6 +23,7 @@ import {
     ArrowLeftOutlined
 } from "@ant-design/icons";
 import { trpc } from '@/utils/trpcClient';
+import useQueryParams from "@/app/hooks/useQueryParams";
 
 interface CalendarCompProps {
     attendanceDetails: AttendanceByDay;
@@ -68,6 +69,7 @@ const getListData = (value: Dayjs, attendanceDetails: AttendanceByDay) => {
 };
 
 const CalendarComp: React.FC<CalendarCompProps> = ({ attendanceDetails }) => {
+    const params = useQueryParams();
     const router = useRouter();
     const [userId, setUserId] = useState<string>("");
 
@@ -175,6 +177,15 @@ const CalendarComp: React.FC<CalendarCompProps> = ({ attendanceDetails }) => {
             </Popover>
         ) : null;
     };
+    const onPanelChange = (value: Dayjs) => {
+        const year = value.year(); 
+        const month = value.month() + 1;
+        params.set('year', year ?? '');
+        params.set('month', month ?? '');
+        params.update();
+    };
+    
+    
 
     return (
         <Card bordered={false}>
@@ -200,7 +211,7 @@ const CalendarComp: React.FC<CalendarCompProps> = ({ attendanceDetails }) => {
                 </Col>
             </Row>
 
-            <Calendar cellRender={dateCellRender} />
+            <Calendar cellRender={dateCellRender} onPanelChange={onPanelChange}/>
         </Card>
     );
 };
