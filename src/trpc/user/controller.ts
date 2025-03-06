@@ -132,7 +132,7 @@ export const updateEmployeeProfileImage = async (
 
     fs.writeFileSync(filePath, buffer);
 
-    const imageUrl = `/uploads/${fileName}`;
+    const imageUrl = `/public/uploads/${fileName}`;
 
     const updatedUser = await User.findByIdAndUpdate(
       employeeId,
@@ -188,7 +188,7 @@ export const updateEmployeeDocuments = async (
 
         fs.writeFileSync(filePath, buffer);
 
-        newDocumentUrls.push(`/documents/${fileName}`);
+        newDocumentUrls.push(`/public/documents/${fileName}`);
       } else {
         newDocumentUrls.push(doc);
       }
@@ -239,7 +239,7 @@ export const addEmployeeDocument = async (
 
       fs.writeFileSync(filePath, buffer);
 
-      documentUrl = `/documents/${fileName}`;
+      documentUrl = `/public/documents/${fileName}`;
     }
 
     const updatedUser = await User.findByIdAndUpdate(
