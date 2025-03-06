@@ -1,10 +1,11 @@
 "use server";
-
+import fs from 'fs';
 import { TRPCError } from "@trpc/server";
 import { Employee } from "@/app/types";
 import { addEmployeeType, editEmployeeType } from "@/app/validations/userSchema";
 import User from "@/models/User";
 import Attendance from '@/models/Attendance';
+import path from 'path';
 
 export async function fetchEmployees(
   page: number,
@@ -113,13 +114,31 @@ export async function deleteEmployee(employeeId: string): Promise<Employee> {
   }
 }
 
-export async function updateEmployeeProfileImage(employeeId: string, profileImage: string): Promise<{ success: boolean; message: string }> {
+export const updateEmployeeProfileImage = async (
+  employeeId: string,
+  profileImageBase64: string
+): Promise<{ success: boolean; imageUrl: string; message: string }> => {
   try {
+    const uploadDir = path.join(process.cwd(), "public/uploads");
+    if (!fs.existsSync(uploadDir)) {
+      fs.mkdirSync(uploadDir, { recursive: true });
+    }
+
+    const base64Data = profileImageBase64.replace(/^data:image\/\w+;base64,/, "");
+    const buffer = Buffer.from(base64Data, "base64");
+
+    const fileName = `profile_${employeeId}_${Date.now()}.png`;
+    const filePath = path.join(uploadDir, fileName);
+
+    fs.writeFileSync(filePath, buffer);
+
+    const imageUrl = `/uploads/${fileName}`;
+
     const updatedUser = await User.findByIdAndUpdate(
       employeeId,
-      { profileImage },
+      { profileImage: imageUrl },
       { new: true }
-    ).lean<Employee>();
+    ).lean();
 
     if (!updatedUser) {
       throw new TRPCError({
@@ -128,7 +147,7 @@ export async function updateEmployeeProfileImage(employeeId: string, profileImag
       });
     }
 
-    return { success: true, message: "Profile image updated successfully" };
+    return { success: true, imageUrl, message: "Profile image updated successfully" };
   } catch (error) {
     console.error("Error updating profile image:", error);
     throw new TRPCError({
@@ -137,24 +156,58 @@ export async function updateEmployeeProfileImage(employeeId: string, profileImag
       cause: error,
     });
   }
-}
+};
 
-export async function updateEmployeeDocuments(employeeId: string, documents: string[]): Promise<{ success: boolean; message: string }> {
+export const updateEmployeeDocuments = async (
+  employeeId: string,
+  documents: string[]
+): Promise<{ success: boolean; message: string; documentUrls: string[] }> => {
   try {
+    const uploadDir = path.join(process.cwd(), "public/documents");
+    if (!fs.existsSync(uploadDir)) {
+      fs.mkdirSync(uploadDir, { recursive: true });
+    }
+
+    const user = await User.findById(employeeId).lean();
+    if (!user) {
+      throw new TRPCError({
+        code: "NOT_FOUND",
+        message: "Employee not found for document update",
+      });
+    }
+
+    const newDocumentUrls: string[] = [];
+
+    for (const doc of documents) {
+      if (doc.startsWith("data:image")) {
+        const base64Data = doc.replace(/^data:image\/\w+;base64,/, "");
+        const buffer = Buffer.from(base64Data, "base64");
+
+        const fileName = `doc_${employeeId}_${Date.now()}.png`;
+        const filePath = path.join(uploadDir, fileName);
+
+        fs.writeFileSync(filePath, buffer);
+
+        newDocumentUrls.push(`/documents/${fileName}`);
+      } else {
+        newDocumentUrls.push(doc);
+      }
+    }
+
     const updatedUser = await User.findByIdAndUpdate(
       employeeId,
-      { documents },
+      { documents: newDocumentUrls },
       { new: true }
-    ).lean<Employee>();
+    ).lean();
 
     if (!updatedUser) {
       throw new TRPCError({
         code: "NOT_FOUND",
-        message: "Employee not found for documents update",
+        message: "Employee not found for document update",
       });
     }
 
-    return { success: true, message: "documents updated successfully" };
+    return { success: true, message: "Documents updated successfully", documentUrls: newDocumentUrls };
   } catch (error) {
     console.error("Error updating documents:", error);
     throw new TRPCError({
@@ -163,12 +216,35 @@ export async function updateEmployeeDocuments(employeeId: string, documents: str
       cause: error,
     });
   }
-}
-export async function addEmployeeDocument(employeeId: string, document: string): Promise<{ success: boolean; message: string }> {
+};
+
+export const addEmployeeDocument = async (
+  employeeId: string,
+  document: string
+): Promise<{ success: boolean; message: string; documentUrl: string }> => {
   try {
+    const uploadDir = path.join(process.cwd(), "public/documents");
+    if (!fs.existsSync(uploadDir)) {
+      fs.mkdirSync(uploadDir, { recursive: true });
+    }
+
+    let documentUrl = document;
+
+    if (document.startsWith("data:image")) {
+      const base64Data = document.replace(/^data:image\/\w+;base64,/, "");
+      const buffer = Buffer.from(base64Data, "base64");
+
+      const fileName = `doc_${employeeId}_${Date.now()}.png`;
+      const filePath = path.join(uploadDir, fileName);
+
+      fs.writeFileSync(filePath, buffer);
+
+      documentUrl = `/documents/${fileName}`;
+    }
+
     const updatedUser = await User.findByIdAndUpdate(
       employeeId,
-      { $push: { documents: document } }, // Add document
+      { $push: { documents: documentUrl } }, // Push new document URL
       { new: true }
     ).lean();
 
@@ -179,7 +255,7 @@ export async function addEmployeeDocument(employeeId: string, document: string):
       });
     }
 
-    return { success: true, message: "Document added successfully" };
+    return { success: true, message: "Document added successfully", documentUrl };
   } catch (error) {
     console.error("Error adding document:", error);
     throw new TRPCError({
@@ -188,7 +264,8 @@ export async function addEmployeeDocument(employeeId: string, document: string):
       cause: error,
     });
   }
-}
+};
+
 
 export async function deleteEmployeeDocument(employeeId: string, document: string): Promise<{ success: boolean; message: string }> {
   try {
