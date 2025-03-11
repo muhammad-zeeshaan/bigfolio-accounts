@@ -228,10 +228,15 @@ const EmployeeForm: React.FC<FormProps> = ({ employee, onSubmit, loading }) => {
                             <DatePicker style={{ width: "100%" }} suffixIcon={<CalendarOutlined />} />
                         </Form.Item>
                     </Col>
+                    <Col span={12}>
+                        <Form.Item label="Basic Salary" name="basicSalary" rules={[{ required: true, message: "Please enter basic salary" }]}>
+                            <InputNumber min={0} style={{ width: "100%" }} prefix={<DollarOutlined />} placeholder="Basic Salary" />
+                        </Form.Item>
+                    </Col>
                 </Row>
             </Card>
 
-            <Card title="Salary Information" style={{ marginBottom: 16 }}>
+            {/* <Card title="Salary Information" style={{ marginBottom: 16 }}>
                 <Row gutter={16}>
                     <Col span={12}>
                         <Form.Item label="Basic Salary" name="basicSalary" rules={[{ required: true, message: "Please enter basic salary" }]}>
@@ -274,7 +279,7 @@ const EmployeeForm: React.FC<FormProps> = ({ employee, onSubmit, loading }) => {
                         <Option value="Pending">Pending</Option>
                     </Select>
                 </Form.Item>
-            </Card>
+            </Card> */}
 
             {true && <Card title="Profile Image & Documents" style={{ marginBottom: 16 }}>
                 <Form.Item label="Profile Image" >
@@ -320,7 +325,7 @@ const EmployeeForm: React.FC<FormProps> = ({ employee, onSubmit, loading }) => {
                         beforeUpload={handleAddDocument}
                         listType="picture-card"
                         accept="image/*"
-                        showUploadList={false} // Hide default Ant Design upload list
+                        showUploadList={false}
                     >
                         <div>
                             {addDocumentLoading ? <LoadingOutlined style={{ fontSize: 24 }} /> : <PlusOutlined />}

@@ -1,100 +1,63 @@
 "use client";
 import React from "react";
-import { Form, Input, Button, Typography, Card, Alert, message } from "antd";
+import { Form, Input, Button, Typography, Card } from "antd";
 import { UserOutlined, LockOutlined } from "@ant-design/icons";
 import login from '@/app/actions/login';
 import { LoginFormData } from '@/app/types';
 import Link from 'next/link';
+import showNotification from '@/Components/notification';
 
 export default function LoginPage(): JSX.Element {
     const [form] = Form.useForm();
-    const [error, setError] = React.useState<string | null>(null);
     const [loading, setLoading] = React.useState<boolean>(false);
 
     const onFinish = async (values: LoginFormData): Promise<void> => {
-        setLoading(true)
+        setLoading(true);
         try {
-            const result = await login(values as LoginFormData);
+            const result = await login(values);
             if (result.ok) {
-                message.success("Login successful");
-                if (result.user?.role === 'admin') {
-                    window.location.href = "/admin";
-                } else {
-                    window.location.href = "/calendar";
-                }
-            }
-            if (result?.error) {
-                setError(result.error);
-            } else {
-                setError(null);
+                showNotification({ type: "success", message: "Login Successful", description: "Redirecting..." });
+
+                setTimeout(() => {
+                    window.location.href = result.user?.role === 'admin' ? "/admin" : "/calendar";
+                }, 1500);
+            } else if (result.error) {
+                showNotification({ type: "error", message: "Login Failed", description: result.error });
             }
         } catch (err) {
             console.error("Login failed: ", err);
-            setError("An unexpected error occurred. Please try again.");
+            showNotification({ type: "error", message: "Unexpected Error", description: "Please try again." });
         }
-        setLoading(false)
+        setLoading(false);
     };
 
     const onFinishFailed = (): void => {
-        setError("Please check the fields and try again.");
+        showNotification({ type: "error", message: "Validation Error", description: "Please check the fields and try again." });
     };
 
     return (
-        <div style={{ display: "flex", minHeight: "100vh", flexDirection: "row" }}>
-            <div
-                style={{
-                    flex: 1,
-                    background: "linear-gradient(90deg, rgba(2,0,36,1) 0%, rgba(9,9,121,1) 35%, rgba(0,212,255,1) 100%)",
-                    display: "flex",
-                    justifyContent: "center",
-                    alignItems: "center",
-                    color: "white",
-                    textAlign: "center",
-                }}
-            >
+        <div className="flex flex-col md:flex-row min-h-screen">
+            <div className="hidden md:flex flex-1 bg-gradient-to-r from-indigo-900 via-indigo-600 to-cyan-400 justify-center items-center text-white text-center p-6">
                 <div>
-                    <Typography.Title level={2} style={{ color: "white" }}>
+                    <Typography.Title level={2} className="text-white">
                         Welcome Back!
                     </Typography.Title>
-                    <Typography.Paragraph className='!text-white' style={{ fontSize: "16px", marginTop: "16px" }}>
+                    <Typography.Paragraph className="text-white text-lg mt-4">
                         Login to continue accessing your account and exploring amazing features.
                     </Typography.Paragraph>
                 </div>
             </div>
 
-            <div
-                style={{
-                    flex: 1,
-                    display: "flex",
-                    justifyContent: "center",
-                    alignItems: "center",
-                    backgroundColor: "#f0f2f5",
-                }}
-            >
-                <Card style={{ width: 400, boxShadow: "0 4px 10px rgba(0, 0, 0, 0.1)" }}>
-                    <Typography.Title level={3} style={{ textAlign: "center", marginBottom: 24 }}>
+            <div className="flex flex-1 justify-center items-center bg-gray-100 p-4">
+                <Card className="w-full max-w-sm shadow-md">
+                    <Typography.Title level={3} className="text-center mb-4">
                         Login
                     </Typography.Title>
-
-                    {error && <Alert message={error} type="error" showIcon style={{ marginBottom: 16 }} />}
-
-                    <Form
-                        form={form}
-                        name="login"
-                        layout="vertical"
-                        onFinish={onFinish}
-                        onFinishFailed={onFinishFailed}
-                    >
+                    <Form form={form} name="login" layout="vertical" onFinish={onFinish} onFinishFailed={onFinishFailed}>
                         <Form.Item
                             label="Email"
                             name="email"
-                            rules={[
-                                {
-                                    required: true,
-                                    message: "Please enter your email!",
-                                    type: "email",
-                                },
-                            ]}
+                            rules={[{ required: true, message: "Please enter your email!", type: "email" }]}
                         >
                             <Input prefix={<UserOutlined />} placeholder="Enter your email" />
                         </Form.Item>
@@ -102,29 +65,18 @@ export default function LoginPage(): JSX.Element {
                         <Form.Item
                             label="Password"
                             name="password"
-                            rules={[
-                                {
-                                    required: true,
-                                    message: "Please enter your password!",
-                                    min: 6,
-                                },
-                            ]}
+                            rules={[{ required: true, message: "Please enter your password!", min: 6 }]}
                         >
                             <Input.Password prefix={<LockOutlined />} placeholder="Enter your password" />
                         </Form.Item>
 
                         <Form.Item>
-                            <Button
-                                type="primary"
-                                htmlType="submit"
-                                block
-                                loading={loading} // Add the loading prop to show the loading spinner
-                            >
+                            <Button type="primary" htmlType="submit" block loading={loading}>
                                 Log in
                             </Button>
                         </Form.Item>
                     </Form>
-                    <Typography.Paragraph style={{ textAlign: "center", marginTop: 16 }}>
+                    <Typography.Paragraph className="text-center mt-4">
                         Need an account? <Link href="/signup">Sign Up</Link>
                     </Typography.Paragraph>
                 </Card>

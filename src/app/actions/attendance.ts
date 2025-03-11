@@ -3,6 +3,7 @@ import Attendance from '@/models/Attendance';
 import mongoose from 'mongoose';
 import { AttendanceByDay, AttendanceSummary, SessionUser } from '../types';
 import loadSession from '@/utils/session';
+import User from '@/models/User';
 
 export const checkIn = async (userId: string) => {
     try {
@@ -111,6 +112,12 @@ export const getMonthlyUserAttendance = async (
         const isCurrentMonth = year === today.getFullYear() && month === today.getMonth() + 1;
         const lastValidDay = isCurrentMonth ? today.getDate() : new Date(year, month, 0).getDate();
 
+        const user = await User.findById(userId).select("joiningDate");
+        if (!user) {
+            throw new Error("User not found");
+        }
+        const joiningDate = user.joiningDate ? new Date(user.joiningDate) : null;
+
         const query: { date: { $gte: Date; $lte: Date }; userId?: mongoose.Types.ObjectId } = {
             date: {
                 $gte: startDate,
@@ -159,13 +166,15 @@ export const getMonthlyUserAttendance = async (
             presentDays.add(dateKey);
         });
 
-        // Calculate total absents (excluding weekends) up to today's date
+        // Calculate total absents (excluding weekends) after joining date
         for (let day = 1; day <= lastValidDay; day++) {
             const date = new Date(year, month - 1, day);
             const dateKey = `${day.toString().padStart(2, "0")}-${month.toString().padStart(2, "0")}-${year}`;
 
             const isWeekend = date.getDay() === 6 || date.getDay() === 0;
-            if (!isWeekend && !presentDays.has(dateKey)) {
+
+            // Only count absences after the joining date
+            if (!isWeekend && (!joiningDate || date >= joiningDate) && !presentDays.has(dateKey)) {
                 totalAbsents++;
             }
         }
@@ -188,6 +197,7 @@ export const getMonthlyUserAttendance = async (
         };
     }
 };
+
 
 export const checkOut = async (userId: string) => {
     try {

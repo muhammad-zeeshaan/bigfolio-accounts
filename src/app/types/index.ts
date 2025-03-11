@@ -129,3 +129,12 @@ export interface MongoError extends Error {
         personalEmail?: boolean;
     };
 }
+export interface SalaryFormData {
+    basicSalary: number;
+    allowance: number;
+    bonus: number;
+    overtime: number;
+    tax: number;
+    totalPresent: number;
+    totalAbsent: number;
+}

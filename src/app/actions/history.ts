@@ -19,8 +19,11 @@ interface Query {
 interface UserMatch {
     email?: { $regex: string; $options: string };
     name?: { $regex: string; $options: string };
+    salaryStatus?: { $regex: string; $options: string };
 }
-
+interface filterOptions {
+    $or: UserMatch[]
+}
 interface FetchHistoryResponse {
     data: HistoryDTO[];
     currentPage: number;
@@ -49,13 +52,16 @@ export async function fetchHistory(
         }
 
         const totalRecords = await History.countDocuments(query);
-        const userMatch: UserMatch = {};
-        if (filters.email) {
-            userMatch.email = { $regex: filters.email, $options: 'i' };
-        }
+        const userMatch: filterOptions = { $or: [] };
         if (filters.name) {
-            userMatch.name = { $regex: filters.name, $options: 'i' };
+            userMatch.$or = [
+                { email: { $regex: filters.name, $options: 'i' } },
+                { name: { $regex: filters.name, $options: 'i' } },
+                { salaryStatus: { $regex: filters.name, $options: 'i' } }
+
+            ];
         }
+
         const history = await History.find(query)
             .populate({
                 path: "user",

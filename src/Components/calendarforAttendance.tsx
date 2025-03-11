@@ -1,5 +1,5 @@
 "use client";
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import {
     Badge,
     Button,
@@ -20,13 +20,18 @@ import {
   message,
 } from "antd";
 import type { Dayjs } from "dayjs";
-import { AttendanceRecord, AttendanceSummary, Employee, ErrorResponse } from "@/app/types";
+import { AttendanceRecord, AttendanceSummary, Employee, ErrorResponse, SalaryFormData, SessionUser } from "@/app/types";
 import EditAttendanceModal from './editAttendanceModal';
-import { ArrowDownOutlined, ArrowUpOutlined, EditOutlined, RetweetOutlined } from '@ant-design/icons';
+import { ArrowDownOutlined, ArrowLeftOutlined, ArrowUpOutlined, CheckCircleOutlined, CoffeeOutlined, EditOutlined, LogoutOutlined, RetweetOutlined } from '@ant-design/icons';
 import { Pie } from "@ant-design/plots";
 import type { UploadChangeParam } from 'antd/es/upload';
 import type { RcFile, UploadFile } from 'antd/es/upload/interface';
 import useQueryParams from "@/app/hooks/useQueryParams";
+import { InvoiceModal } from './invoiceModal';
+import { trpc } from '@/utils/trpcClient';
+import SalarySlip from './Slip';
+import { useRouter } from 'next/navigation';
+import { getSession } from 'next-auth/react';
 
 interface CalendarCompProps {
   attendanceDetails: AttendanceSummary;
@@ -74,11 +79,30 @@ const getListData = (value: Dayjs, attendanceDetails: AttendanceSummary) => {
 
 const CalendarComp: React.FC<CalendarCompProps> = ({ attendanceDetails, userData }) => {
   const params = useQueryParams();
+  const router = useRouter()
   const [attendanceData, setAttendanceData] = useState<AttendanceRecord | null>(null);
   const [attendanceModal, setAttendanceModal] = useState<boolean>(false);
   const [passwordModalVisible, setPasswordModalVisible] = useState<boolean>(false);
   const [fileList, setFileList] = useState<UploadFile[]>([]);
-
+  const [invoiceModalVisible, setInvoiceModalVisible] = useState<boolean>(false);
+  const [previewImage, setPreviewImage] = useState<string | null>(null);
+  const [isSalaryModalOpen, setSalaryModalOpen] = useState<boolean>(false);
+  const [singleEmployee, setSingleEmployee] = useState<Employee | null>(null);
+  const [userId, setUserId] = useState<string>("");
+  useEffect(() => {
+    getSession().then((session) => {
+      const user: SessionUser = session?.user as SessionUser;
+      setUserId(user?.id ?? "");
+    });
+  }, []);
+  const { mutate: updateProfileImage } = trpc.employee.updateEmployeeProfileImage.useMutation({
+    onSuccess: () => {
+      message.success('Profile Image updated successfully');
+    },
+    onError: () => {
+      message.error("Failed to update profile image");
+    },
+  })
   const onClose = (): void => {
     setAttendanceModal(!attendanceModal);
   };
@@ -86,7 +110,51 @@ const CalendarComp: React.FC<CalendarCompProps> = ({ attendanceDetails, userData
   const isEmployee = (data: Employee | ErrorResponse): data is Employee => {
     return (data as Employee).email !== undefined;
   };
+  const checkInMutation = trpc.attendance.checkIn.useMutation({
+    onSuccess: (res) => {
+      if (res.attendance) {
+        message.success(res.message)
+      } else {
+        message.warning(res.message);
+      }
+      router.refresh();
+    },
+    onError: () => message.error("Error during check-in"),
+  });
 
+  const checkOutMutation = trpc.attendance.checkOut.useMutation({
+    onSuccess: (res) => {
+      if (res.attendance) {
+        message.success(res.message)
+      } else {
+        message.warning(res.message);
+      }
+      router.refresh();
+    },
+    onError: () => message.error("Error during check-out"),
+  });
+
+  const startBreakMutation = trpc.attendance.startBreak.useMutation({
+    onSuccess: (res) => {
+      if (res.attendance) {
+        message.success(res.message)
+      } else {
+        message.warning(res.message);
+      }
+      router.refresh();
+    },
+    onError: () => message.error("Error starting break"),
+  });
+
+  const endBreakMutation = trpc.attendance.endBreak.useMutation({
+    onSuccess: (res) => {
+      if (res.attendance) {
+        message.success(res.message)
+      } else { message.warning(res.message); }
+      router.refresh();
+    },
+    onError: () => message.error("Error ending break"),
+  });
   const data = [
     { type: "Overtime Days", value: attendanceDetails.overtimeDays },
     { type: "Total Absents", value: attendanceDetails.totalAbsents },
@@ -173,18 +241,29 @@ const CalendarComp: React.FC<CalendarCompProps> = ({ attendanceDetails, userData
         ) : null;
     };
 
-  const handleProfilePhotoChange = (info: UploadChangeParam<UploadFile>) => {
-    let fileList = [...info.fileList];
-    fileList = fileList.slice(-1);
-    setFileList(fileList);
+  const handleProfilePhotoChange = async (info: UploadChangeParam<UploadFile>) => {
+    const file = info.file.originFileObj as RcFile;
+    if (!file) return;
 
-    if (info.file.status === 'done') {
-      message.success(`${info.file.name} file uploaded successfully`);
-    } else if (info.file.status === 'error') {
-      message.error(`${info.file.name} file upload failed.`);
+    const toBase64 = (file: RcFile): Promise<string> =>
+      new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.readAsDataURL(file);
+        reader.onload = () => resolve(reader.result as string);
+        reader.onerror = (error) => reject(error);
+      });
+
+    try {
+      const base64String = await toBase64(file);
+      setPreviewImage(base64String); // Set preview
+      updateProfileImage({ profileImage: base64String, employeeId: isEmployee(userData) ? userData?._id : "" });
+      setFileList([{ uid: file.uid, name: file.name, status: "done", url: base64String }]);
+      message.success(`${file.name} uploaded successfully`);
+    } catch (error) {
+      message.error("Failed to convert image to Base64");
+      console.log(error)
     }
   };
-
   const handlePasswordChange = (values: unknown) => {
     console.log('Received values of form: ', values);
     setPasswordModalVisible(false);
@@ -198,10 +277,36 @@ const CalendarComp: React.FC<CalendarCompProps> = ({ attendanceDetails, userData
           params.set('month', month ?? '');
           params.update();
       };
-
+  const handleInvoiceSubmit = (values: SalaryFormData) => {
+    console.log('Received values of form: ', values);
+    // setSingleEmployee({ ...userData, ...values });
+    console.log("=========>", { ...userData, ...values })
+    console.log(setSingleEmployee)
+    // setInvoiceModalVisible(true)
+  };
     return (
       <>
         <h1 className="text-xl sm:text-2xl font-bold mb-4 sm:mb-6">Profile Page</h1>
+        <Row justify="space-between" align="middle" className="mb-4">
+          <Col>
+          </Col>
+          <Col xs={24} sm={12} >
+            <div className="grid grid-cols-2 gap-2 sm:flex md:justify-end sm:space-x-2">
+              <Button type="primary" loading={checkInMutation.isLoading} icon={<CheckCircleOutlined />} onClick={() => checkInMutation.mutate({ userId })}>
+                Check In
+              </Button>
+              <Button type="default" loading={startBreakMutation.isLoading} icon={<CoffeeOutlined />} onClick={() => startBreakMutation.mutate({ userId })}>
+                Break
+              </Button>
+              <Button type="dashed" loading={endBreakMutation.isLoading} icon={<ArrowLeftOutlined />} onClick={() => endBreakMutation.mutate({ userId })}>
+                Back
+              </Button>
+              <Button type="primary" danger loading={checkOutMutation.isLoading} icon={<LogoutOutlined />} onClick={() => checkOutMutation.mutate({ userId })}>
+                Check Out
+              </Button>
+            </div>
+          </Col>
+        </Row>
         <div className="!my-3">
           <Row gutter={[16, 16]} justify="center">
             {[
@@ -239,7 +344,7 @@ const CalendarComp: React.FC<CalendarCompProps> = ({ attendanceDetails, userData
                     }}
                     showUploadList={false}
                   >
-                    <Avatar size={128} src={fileList.length > 0 ? URL.createObjectURL(fileList[0].originFileObj as RcFile) : userData.profileImage} />
+                    <Avatar size={128} src={previewImage || userData.profileImage} />
                   </Upload>
 
                   <Descriptions title="User Info" column={1} size="small">
@@ -251,9 +356,12 @@ const CalendarComp: React.FC<CalendarCompProps> = ({ attendanceDetails, userData
                     <Descriptions.Item label="Joining Date">{new Date(userData.joiningDate).toLocaleDateString()}</Descriptions.Item>
                     {userData.leavingDate && <Descriptions.Item label="Leaving Date">{new Date(userData.leavingDate).toLocaleDateString()}</Descriptions.Item>}
                   </Descriptions>
-                  <div className="flex flex-wrap justify-start gap-2 mt-4">
+                  <div className="flex flex-wrap justify-between gap-2 mt-4">
                     <Button icon={<EditOutlined />} onClick={() => setPasswordModalVisible(true)} className="z-50">
                       Change Password
+                    </Button>
+                    <Button type="primary" onClick={() => setInvoiceModalVisible(true)}>
+                      Generate Invoice
                     </Button>
                   </div>
                   <div className="mt-6">
@@ -272,7 +380,13 @@ const CalendarComp: React.FC<CalendarCompProps> = ({ attendanceDetails, userData
             </Card>
           </Col>
         </Row>
-
+        <InvoiceModal
+          visible={invoiceModalVisible}
+          onCancel={() => setInvoiceModalVisible(false)}
+          attendanceDetails={attendanceDetails}
+          onFinish={handleInvoiceSubmit}
+          userData={userData}
+        />
         <Modal title="Change Password" open={passwordModalVisible} onCancel={() => setPasswordModalVisible(false)} footer={null}>
           <Form onFinish={handlePasswordChange}>
             <Form.Item name="oldPassword" label="Old Password" rules={[{ required: true, message: "Please input your old password!" }]}>
@@ -305,6 +419,9 @@ const CalendarComp: React.FC<CalendarCompProps> = ({ attendanceDetails, userData
               </Button>
             </Form.Item>
           </Form>
+        </Modal>
+        <Modal open={isSalaryModalOpen} onClose={() => setSalaryModalOpen(false)}>
+          {singleEmployee && <SalarySlip employeedetail={singleEmployee} />}
         </Modal>
       </>
 

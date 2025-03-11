@@ -45,6 +45,7 @@ const Columns = (
                 title: "Actions",
                 dataIndex: "actions",
                 key: "actions",
+                align: "center",
                 render: (_text: string, row: Employee) => (
                     <Space size="middle">
                         <Tooltip title="Edit">
@@ -52,10 +53,10 @@ const Columns = (
                                 type="primary"
                                 icon={<EditOutlined />}
                                 onClick={() => {
-                                    setId(row?._id)
-                                    return handleEdit(row)
+                                    setId(row?._id);
+                                    return handleEdit(row);
                                 }}
-                                loading={editLoading && (row?._id === id)}
+                                loading={editLoading && row?._id === id}
                             />
                         </Tooltip>
 
@@ -68,11 +69,9 @@ const Columns = (
                         </Tooltip>
 
                         <Tooltip title="Profile">
-                            <Button type="link" icon={<UserOutlined />}>
-                                <Link href={`/admin/${row._id}`} passHref>
-                                    <>Profile</>
-                                </Link>
-                            </Button>
+                            <Link href={`/admin/${row._id}`} passHref>
+                                <Button type="default" icon={<UserOutlined />} />
+                            </Link>
                         </Tooltip>
 
                         <Tooltip title="Delete">
@@ -86,6 +85,7 @@ const Columns = (
                             </Popconfirm>
                         </Tooltip>
                     </Space>
+
                 ),
             },
         ]

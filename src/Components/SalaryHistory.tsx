@@ -3,7 +3,7 @@ import React from "react";
 import Table from "./Table";
 import { HistoryDTO } from "@/app/types";
 import columns from "@/app/columns/slipHistory";
-import { Input, Select, DatePicker } from "antd";
+import { Input, DatePicker } from "antd";
 import useQueryParams from '@/app/hooks/useQueryParams';
 
 export default function SalaryHistory({
@@ -18,6 +18,7 @@ export default function SalaryHistory({
     currentPage: number;
 }) {
     const params = useQueryParams();
+
     const handleFilterChange = (key: string, value: string) => {
         if (value) {
             params.set(key, value);
@@ -28,26 +29,21 @@ export default function SalaryHistory({
     };
 
     const filterComponents = (
-        <div style={{ marginBottom: "16px", display: "flex", gap: "16px" }}>
+        <div style={{
+            marginBottom: "16px",
+            display: "flex",
+            justifyContent: "flex-end",
+            gap: "16px",
+            width: "100%",
+            maxWidth: "800px",
+            marginLeft: "auto",
+        }}>
             <Input
-                placeholder="Search by Name"
-                type='search'
+                placeholder="Search by Name, Email, or Status"
+                type="search"
                 onChange={(e) => handleFilterChange("name", e.target.value)}
+                style={{ width: "300px" }}
             />
-            <Input
-                placeholder="Search by Email"
-                type='search'
-                onChange={(e) => handleFilterChange("email", e.target.value)}
-            />
-            <Select
-                placeholder="Salary Status"
-                onChange={(value) => handleFilterChange("salaryStatus", value)}
-                style={{ width: 200 }}
-            >
-                <Select.Option value="">All</Select.Option>
-                <Select.Option value="Send">Send</Select.Option>
-                <Select.Option value="Pending">Pending</Select.Option>
-            </Select>
             <DatePicker
                 picker="month"
                 onChange={(date) => {
@@ -57,6 +53,7 @@ export default function SalaryHistory({
                     );
                 }}
                 placeholder="Dispatch Month/Year"
+                style={{ width: "200px" }} 
             />
         </div>
     );

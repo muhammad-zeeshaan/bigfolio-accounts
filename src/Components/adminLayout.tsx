@@ -44,7 +44,6 @@ const AdminLayout: React.FC<LayoutProps> = ({ children, session }) => {
     const menuItems = [
         { key: 'home', label: 'Home', href: '/' },
         { key: 'admin', label: 'Employee', href: '/admin' },
-        { key: 'calendar', label: 'Calendar', href: '/admin/calendar' },
         { key: 'history', label: 'History', href: '/admin/history' },
         { key: 'invoice', label: 'Invoice', href: '/admin/invoice' },
     ];

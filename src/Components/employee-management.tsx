@@ -105,7 +105,7 @@ export default function EmployeeManagement({ employees, totalRecords, limit, cur
     };
 
     return (
-        <main className="max-w-7xl mx-auto">
+        <>
             <h1 className="text-2xl font-bold mb-6">Employee Management</h1>
             <div className="mb-4 flex justify-end gap-3">
                 <Button
@@ -156,6 +156,6 @@ export default function EmployeeManagement({ employees, totalRecords, limit, cur
             <Modal isOpen={isSalaryModalOpen} onClose={() => setSalaryModalOpen(false)}>
                 {singleEmployee && <SalarySlip employeedetail={singleEmployee} />}
             </Modal>
-        </main>
+        </>
     );
 }

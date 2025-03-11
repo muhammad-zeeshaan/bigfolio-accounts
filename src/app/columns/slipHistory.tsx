@@ -13,7 +13,7 @@ const columns = () => [
         key: "email",
     },
     {
-        title: "Dispatch Date",
+        title: "Value Date",
         dataIndex: "dispatchDate",
         key: "dispatchDate",
         render: (value: unknown) => new Date(value as string).toLocaleDateString(),
