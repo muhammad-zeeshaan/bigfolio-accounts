@@ -2,167 +2,101 @@ import { Employee } from '@/app/types';
 import React from "react";
 
 const SalarySlip = ({ employeedetail }: { employeedetail: Employee }) => {
-    const { name, designation, basicSalary, bonus, allowance, overtime, tax, holiday } = employeedetail
+    const { basicSalary, bonus, allowance, overtime, tax, holiday } = employeedetail;
+
     const salaryMonth = (): string => {
-        const currentDate: Date = new Date();
+        const currentDate = new Date();
+        const day = String(currentDate.getDate()).padStart(2, '0');
+        const month = String(currentDate.getMonth() + 1).padStart(2, '0');
+        const year = currentDate.getFullYear();
 
-        const options: Intl.DateTimeFormatOptions = { month: 'short' };
-        const month: string = currentDate
-            .toLocaleString('en-US', options)
-            .toUpperCase();
-
-        const year: string = currentDate.getFullYear().toString().slice(-2);
-
-        return `${month} ${year}`;
+        return `${day}/${month}/${year}`;
     };
+
     const getWeekdaysInMonth = (): number => {
-        const currentDate: Date = new Date();
-        const currentYear: number = currentDate.getFullYear();
-        const currentMonth: number = currentDate.getMonth();
-
-        const totalDaysInMonth: number = new Date(currentYear, currentMonth + 1, 0).getDate();
-        let weekdaysCount: number = 0;
-
-        for (let day = 1; day <= totalDaysInMonth; day++) {
-            const date: Date = new Date(currentYear, currentMonth, day);
-            const dayOfWeek: number = date.getDay();
-
-            if (dayOfWeek !== 0 && dayOfWeek !== 6) {
-                weekdaysCount++;
-            }
-        }
-        return weekdaysCount;
+        const currentDate = new Date();
+        const totalDaysInMonth = new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 0).getDate();
+        return Array.from({ length: totalDaysInMonth }, (_, day) => new Date(currentDate.getFullYear(), currentDate.getMonth(), day + 1))
+            .filter(date => date.getDay() !== 0 && date.getDay() !== 6).length;
     };
-    const oneDaySalaryOfEmployee = (): number => {
-        return basicSalary / getWeekdaysInMonth()
-    }
-    const overTimePayment = (): number => {
-        const oneDaySalary = oneDaySalaryOfEmployee()
-        return (overtime * oneDaySalary)
+
+    const oneDaySalary = basicSalary / getWeekdaysInMonth();
+    const overtimePayment = overtime * oneDaySalary;
+    const workingDays = getWeekdaysInMonth() - holiday;
+    const workingDaysPayment = workingDays * oneDaySalary;
+    const totalSalary = (workingDaysPayment + overtimePayment + bonus + allowance) - tax;
+    function capitalizeFirstLetter(str: string) {
+        if (!str) return str;
+        const updatedString = str.split('_').join(' ')
+        return updatedString.charAt(0).toUpperCase() + str.slice(1);
     }
 
-    const employeeWorkingDays = (): number => {
-        return getWeekdaysInMonth() - holiday
-    }
-    const employeeWorkingDaysPayment = (): number => {
-        return employeeWorkingDays() * oneDaySalaryOfEmployee()
-    }
-    const totalSalary = (): number => {
-        const totalOverTimePayment = overTimePayment()
-        const total = (totalOverTimePayment + bonus + allowance + employeeWorkingDaysPayment()) - tax
-        return total
-
-    }
     return (
-        <div className="max-w-4xl mx-auto ">
-            {/* Header Section */}
-            <div
-                className="flex items-center mt-10 justify-end mb-6 bg-[#013a4d] py-1 w-60 pr-3"
-                style={{
-                    borderTopRightRadius: '63px',
-                }}
-            >
-                <img
-                    src="/Bigfolio-Logo-Landscape-White.png"
-                    alt="Bigfolio"
-                    className="h-10"
-                    style={{ marginLeft: "auto" }}
-                />
-            </div>
-
-            <div className='lg:px-20 max-lg:px-4'>
-                {/* Employee Details */}
-                <div className="grid grid-cols-2 p-6 gap-y-2 mb-6 text-sm">
-                    <div className='space-y-1'>
-                        <p>Name: <span >{name}</span></p>
-                        <p>Designation: <span >{designation}</span></p>
-                        <p>Salary Package: <span >{basicSalary.toString()}</span></p>
-                    </div>
-                    <div className="space-y-1 text-right">
-                        <p className="font-bold text-sm">Salary Month: {salaryMonth()}</p>
-                        <p className="text-sm">Dispatch Date: 15/12/2024</p>
-                    </div>
+        <div className='mt-6'>
+            {/* Header */}
+            <div className="flex justify-between items-start ">
+                <div className="flex items-center gap-x-[5px]">
+                    <img src="/public/Bigfolio-logo.svg" alt="Bigfolio Logo" className="w-[22px] h-[30px]" />
+                    <img src="/public/bigfolio-text.svg" alt="Bigfolio Logo" className="w-[83.37px] h-[24.58px]" />
                 </div>
-
-                {/* Table Section */}
-                <div>
-                    <div className="bg-[rgb(255_231_177)] py-2 px-6 font-bold flex justify-between">
-                        <span>Details</span>
-                        <span>AMOUNT</span>
-                    </div>
-                    <div className="">
-                        <div className="flex justify-between py-2 px-4">
-                            <span>Basic Salary: ({employeeWorkingDays()} out of {getWeekdaysInMonth()} working days)</span>
-                            <span>{employeeWorkingDaysPayment().toFixed(2)} PKR</span>
-                        </div>
-                        <div className="flex justify-between py-2 px-4">
-                            <span>Over Time:</span>
-                            <span>{overTimePayment().toFixed(2)} PKR</span>
-                        </div>
-                        <div className="flex justify-between py-2 px-4">
-                            <span>Allowance:</span>
-                            <span>{allowance} PKR</span>
-                        </div>
-                        <div className="flex justify-between py-2 px-4">
-                            <span>Bonus:</span>
-                            <span>{bonus} PKR</span>
-                        </div>
-                        <div className="flex justify-between py-2 px-4">
-                            <span>Withheld Tax:</span>
-                            <span>{tax} PKR</span>
-                        </div>
-                    </div>
-                </div>
-
-                {/* Total Section */}
-                <div className="flex justify-between font-bold text-lg border-t mt-20 pt-2 px-4">
-                    <span>Total:</span>
-                    <span>{totalSalary().toFixed(2)} PKR</span>
+                <div className="text-right">
+                    <p className="text-black">Value date: {salaryMonth()}</p>
                 </div>
             </div>
-
-            {/* Signatures Section */}
-            <div className="mt-8 grid grid-cols-2 gap-12">
-                <div className="text-center">
-                    <p className="font-bold">Muhammad Zeeshan</p>
-                    <p className="text-sm text-gray-600">CEO Bigfolio LLC</p>
-                    <div className="border-t mt-2"></div>
-                </div>
-                <div className="text-center">
-                    <p className="font-bold">XXXXXX</p>
-                    <p className="text-sm text-gray-600">Graphic Designer</p>
-                    <div className="border-t mt-2"></div>
-                </div>
+            <div className='mt-8'>
+                <h3 className="font-semibold">Invoice To:</h3>
+                <p className="text-black">Name: {capitalizeFirstLetter(employeedetail?.name ?? '')}</p>
+                <p className="text-black">Designation: {capitalizeFirstLetter(employeedetail?.designation ?? '')}</p>
+                <p className="text-black">Salary Package: {employeedetail?.basicSalary ?? ''}</p>
             </div>
 
-            {/* Footer Section */}
-            <div className="bg-[rgb(255_231_177)] mt-8 px-14 py-4 text-sm text-gray-700">
-                <div className="flex justify-between">
-                    <div className="flex space-x-2 items-center">
-                        <span>🌐</span>
-                        <a href="https://www.bigfolio.co" className="hover:underline">
-                            www.bigfolio.co
-                        </a>
-                    </div>
-                    <div className="flex space-x-2 items-center">
-                        <span>✉️</span>
-                        <a href="mailto:hello@bigfolio.co" className="hover:underline">
-                            hello@bigfolio.co
-                        </a>
-                    </div>
-                    <div className="flex space-x-2 items-center">
-                        <span>📞</span>
-                        <a href="tel:+923147866976" className="hover:underline">
-                            +92 314-7866976
-                        </a>
-                    </div>
-                    <div className="flex space-x-2 items-center">
-                        <span>📍</span>
-                        <span>24, C3, MM Alam Road, Gulberg III, Lahore</span>
-                    </div>
+            {/* Salary Breakdown Table */}
+            <table className="w-full mt-8 border border-gray-300 border-collapse">
+                <thead>
+                    <tr className="border-b border-gray-300 h-[40px] text-left font-semibold">
+                        <th className="px-6 py-3 w-[67%]">Details</th>
+                        <th className="px-6 py-3 w-[33%] text-right">Amount (PKR)</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr className="border-b border-gray-300 h-[40px]">
+                        <td className="px-6 py-3">Basic Salary ({workingDays} out of {getWeekdaysInMonth()} working days)</td>
+                        <td className="px-6 py-3 text-right">{workingDaysPayment.toFixed(2)}</td>
+                    </tr>
+                    <tr className="border-b border-gray-300 h-[40px]">
+                        <td className="px-6 py-3">Overtime</td>
+                        <td className="px-6 py-3 text-right">{overtimePayment.toFixed(2)}</td>
+                    </tr>
+                    <tr className="border-b border-gray-300 h-[40px]">
+                        <td className="px-6 py-3">Allowance</td>
+                        <td className="px-6 py-3 text-right">{allowance.toFixed(2)}</td>
+                    </tr>
+                    <tr className="border-b border-gray-300 h-[40px]">
+                        <td className="px-6 py-3">Bonus</td>
+                        <td className="px-6 py-3 text-right">{bonus.toFixed(2)}</td>
+                    </tr>
+                    <tr className="border-b border-gray-300 h-[40px]">
+                        <td className="px-6 py-3">Tax</td>
+                        <td className="px-6 py-3 text-right">-{tax.toFixed(2)}</td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <div className='mt-6 flex justify-end'>
+                <div className="w-36">
+                    <p className="font-normal flex justify-between ">Subtotal: <span className="font-semibold">${workingDaysPayment.toFixed(2)}</span></p>
+                    <p className="font-normal flex justify-between">Tax: <span className="font-semibold">${tax}</span></p>
+                    <div className="w-full border-t border-[#656565] opacity-20 my-4"></div>
+                    <p className="font-normal flex justify-between">Total: <span className="font-semibold">{totalSalary.toFixed(2)} PKR</span></p>
                 </div>
             </div>
-            <div className="bg-[rgb(2_58_76)] h-[70px]" />
+            <p className='font-semibold mt-3'>Note:<span className='font-normal'>This invoice is system generated and does not requires any stamps.</span></p>
+            {/* Footer */}
+            <div className="w-full border-t border-[#656565] opacity-20 my-4"></div>
+            <div className="flex space-x-4">
+                <div className="flex-1">Business Centre, Sharjah Publishing City Free Zone, UAE</div>
+                <div className="flex-1">+971 58 549 2071<br />hello@bigfolio.co</div>
+            </div>
         </div>
     );
 };
