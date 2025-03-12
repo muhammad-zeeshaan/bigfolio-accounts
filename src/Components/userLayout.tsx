@@ -46,7 +46,7 @@ const UserLayout: React.FC<LayoutProps> = ({ children, session }) => {
     const userMenu = (
         <Menu>
             <Menu.Item key="account">
-                <Link href={"/admin/account"}>My Account</Link>
+                <Link href={"/account"}>My Account</Link>
             </Menu.Item>
             <Menu.Item key="logout" onClick={handleLogout}>
                 Logout
@@ -87,9 +87,9 @@ const UserLayout: React.FC<LayoutProps> = ({ children, session }) => {
                         </Dropdown>
                     </div>
                 </Header>
-                <Content style={{ padding: '0 50px', marginTop: 64 }}>
-                    <Breadcrumb style={{ margin: '16px 0' }} items={generateBreadcrumbs()} />
-                    <div style={{ background: '#fff', padding: 24, minHeight: 380 }}>
+                <Content className="px-[2px] md:px-12 pt-8 md:pt-16">
+                    <Breadcrumb className="!my-4" items={generateBreadcrumbs()} />
+                    <div className="p-4 sm:p-6  min-h-screen">
                         {children}
                     </div>
                 </Content>

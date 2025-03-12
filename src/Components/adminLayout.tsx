@@ -46,6 +46,7 @@ const AdminLayout: React.FC<LayoutProps> = ({ children, session }) => {
         { key: 'admin', label: 'Employee', href: '/admin' },
         { key: 'history', label: 'History', href: '/admin/history' },
         { key: 'invoice', label: 'Invoice', href: '/admin/invoice' },
+        { key: 'letter', label: 'Letter', href: '/admin/letter' },
     ];
 
     const generateBreadcrumbs = () => {

@@ -60,13 +60,13 @@ const Columns = (
                             />
                         </Tooltip>
 
-                        <Tooltip title="View">
+                        {false && <Tooltip title="View">
                             <Button
                                 type="default"
                                 icon={<EyeOutlined />}
                                 onClick={() => handleView(row)}
                             />
-                        </Tooltip>
+                        </Tooltip>}
 
                         <Tooltip title="Profile">
                             <Link href={`/admin/${row._id}`} passHref>

@@ -90,9 +90,11 @@ const CalendarComp: React.FC<CalendarCompProps> = ({ attendanceDetails, userData
   const [isSalaryModalOpen, setSalaryModalOpen] = useState<boolean>(false);
   const [singleEmployee, setSingleEmployee] = useState<EmployeeSalaryDTO | null>(null);
   const [userId, setUserId] = useState<string>("");
+  const [sessionUser, seSessionUser] = useState<SessionUser>();
   useEffect(() => {
     getSession().then((session) => {
       const user: SessionUser = session?.user as SessionUser;
+      seSessionUser(user);
       setUserId(user?.id ?? "");
     });
   }, []);
@@ -182,7 +184,7 @@ const CalendarComp: React.FC<CalendarCompProps> = ({ attendanceDetails, userData
     },
   };
 
-    const dateCellRender = (value: Dayjs) => {
+  const dateCellRender = (value: Dayjs, isAdmin: boolean) => {
         const dateKey = `${value.date().toString().padStart(2, "0")}-${(value.month() + 1).toString().padStart(2, "0")}-${value.year()}`;
       const userData = getListData(value, attendanceDetails);
 
@@ -219,10 +221,10 @@ const CalendarComp: React.FC<CalendarCompProps> = ({ attendanceDetails, userData
                                 </List.Item>
                             )}
                         />
-                        <Button size='small' onClick={() => {
+                {isAdmin && <Button size='small' onClick={() => {
                   setAttendanceData(attendanceDetails?.attendanceByDay[dateKey][0]);
                   onClose();
-                        }} className='ml-3 mt-2' type='primary'>Change Attendance</Button>
+                }} className='ml-3 mt-2' type='primary'>Change Attendance</Button>}
                         <EditAttendanceModal visible={attendanceModal} onClose={onClose} attendance={attendanceData as AttendanceRecord & null} />
                     </>
                 }
@@ -283,6 +285,8 @@ const CalendarComp: React.FC<CalendarCompProps> = ({ attendanceDetails, userData
     setSingleEmployee(dataCopy as unknown as EmployeeSalaryDTO)
     setSalaryModalOpen(true)
   };
+  // console.log()
+
     return (
       <>
         <h1 className="text-xl sm:text-2xl font-bold mb-4 sm:mb-6">Profile Page</h1>
@@ -356,12 +360,12 @@ const CalendarComp: React.FC<CalendarCompProps> = ({ attendanceDetails, userData
                     {userData.leavingDate && <Descriptions.Item label="Leaving Date">{new Date(userData.leavingDate).toLocaleDateString()}</Descriptions.Item>}
                   </Descriptions>
                   <div className="flex flex-wrap justify-between gap-2 mt-4">
-                    <Button icon={<EditOutlined />} onClick={() => setPasswordModalVisible(true)} className="z-50">
+                    {false && <Button icon={<EditOutlined />} onClick={() => setPasswordModalVisible(true)} className="z-50">
                       Change Password
-                    </Button>
-                    <Button type="primary" onClick={() => setInvoiceModalVisible(true)}>
+                    </Button>}
+                    {(Boolean(sessionUser && sessionUser?.role === "admin")) && <Button type="primary" onClick={() => setInvoiceModalVisible(true)}>
                       Generate Invoice
-                    </Button>
+                    </Button>}
                   </div>
                   <div className="mt-6">
                     <Pie {...config} />
@@ -375,7 +379,7 @@ const CalendarComp: React.FC<CalendarCompProps> = ({ attendanceDetails, userData
 
           <Col xs={24} md={12} lg={18}>
             <Card bordered={false} className="rounded-lg">
-              <Calendar cellRender={dateCellRender} onPanelChange={onPanelChange} />
+              <Calendar cellRender={(e) => dateCellRender(e, (Boolean(sessionUser && sessionUser?.role === "admin")))} onPanelChange={onPanelChange} />
             </Card>
           </Col>
         </Row>
