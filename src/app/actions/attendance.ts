@@ -152,6 +152,8 @@ export const getMonthlyUserAttendance = async (
             const isWeekend = day.getDay() === 6 || day.getDay() === 0; // Saturday (6) & Sunday (0)
             if (isWeekend) {
                 overtimeDays++;
+            } else {
+                totalPresent++
             }
 
             attendanceByDay[dateKey].push({
@@ -178,8 +180,6 @@ export const getMonthlyUserAttendance = async (
                 totalAbsents++;
             }
         }
-
-        totalPresent = presentDays.size;
 
         return {
             attendanceByDay,

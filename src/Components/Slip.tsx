@@ -1,8 +1,8 @@
-import { Employee } from '@/app/types';
+import { EmployeeSalaryDTO } from '@/app/types';
 import React from "react";
 
-const SalarySlip = ({ employeedetail }: { employeedetail: Employee }) => {
-    const { basicSalary, bonus, allowance, overtime, tax, holiday } = employeedetail;
+const SalarySlip = ({ employeedetail }: { employeedetail: EmployeeSalaryDTO }) => {
+    const { bonus, allowance, overtime, tax, totalWorkingDays, overTimePayment, totalPresent, subTotal, total } = employeedetail;
 
     const salaryMonth = (): string => {
         const currentDate = new Date();
@@ -13,18 +13,7 @@ const SalarySlip = ({ employeedetail }: { employeedetail: Employee }) => {
         return `${day}/${month}/${year}`;
     };
 
-    const getWeekdaysInMonth = (): number => {
-        const currentDate = new Date();
-        const totalDaysInMonth = new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 0).getDate();
-        return Array.from({ length: totalDaysInMonth }, (_, day) => new Date(currentDate.getFullYear(), currentDate.getMonth(), day + 1))
-            .filter(date => date.getDay() !== 0 && date.getDay() !== 6).length;
-    };
-
-    const oneDaySalary = basicSalary / getWeekdaysInMonth();
-    const overtimePayment = overtime * oneDaySalary;
-    const workingDays = getWeekdaysInMonth() - holiday;
-    const workingDaysPayment = workingDays * oneDaySalary;
-    const totalSalary = (workingDaysPayment + overtimePayment + bonus + allowance) - tax;
+    const workingDays = totalPresent + overtime;
     function capitalizeFirstLetter(str: string) {
         if (!str) return str;
         const updatedString = str.split('_').join(' ')
@@ -60,12 +49,12 @@ const SalarySlip = ({ employeedetail }: { employeedetail: Employee }) => {
                 </thead>
                 <tbody>
                     <tr className="border-b border-gray-300 h-[40px]">
-                        <td className="px-6 py-3">Basic Salary ({workingDays} out of {getWeekdaysInMonth()} working days)</td>
-                        <td className="px-6 py-3 text-right">{workingDaysPayment.toFixed(2)}</td>
+                        <td className="px-6 py-3">Basic Salary ({workingDays} out of {totalWorkingDays} working days)</td>
+                        <td className="px-6 py-3 text-right">{subTotal.toFixed(2)}</td>
                     </tr>
                     <tr className="border-b border-gray-300 h-[40px]">
                         <td className="px-6 py-3">Overtime</td>
-                        <td className="px-6 py-3 text-right">{overtimePayment.toFixed(2)}</td>
+                        <td className="px-6 py-3 text-right">{overTimePayment.toFixed(2)}</td>
                     </tr>
                     <tr className="border-b border-gray-300 h-[40px]">
                         <td className="px-6 py-3">Allowance</td>
@@ -84,10 +73,10 @@ const SalarySlip = ({ employeedetail }: { employeedetail: Employee }) => {
 
             <div className='mt-6 flex justify-end'>
                 <div className="w-36">
-                    <p className="font-normal flex justify-between ">Subtotal: <span className="font-semibold">${workingDaysPayment.toFixed(2)}</span></p>
+                    <p className="font-normal flex justify-between ">Subtotal: <span className="font-semibold">${subTotal.toFixed(2)}</span></p>
                     <p className="font-normal flex justify-between">Tax: <span className="font-semibold">${tax}</span></p>
                     <div className="w-full border-t border-[#656565] opacity-20 my-4"></div>
-                    <p className="font-normal flex justify-between">Total: <span className="font-semibold">{totalSalary.toFixed(2)} PKR</span></p>
+                    <p className="font-normal flex justify-between">Total: <span className="font-semibold">{total.toFixed(2)} PKR</span></p>
                 </div>
             </div>
             <p className='font-semibold mt-3'>Note:<span className='font-normal'>This invoice is system generated and does not requires any stamps.</span></p>

@@ -44,9 +44,9 @@ export function renderInvoice({ invoiceData }: { invoiceData: InvoiceData }) {
           <tbody>
             ${items.map(item => `
               <tr>
-                <td>${item.ticket}</td>
-                <td>${item.hours}</td>
-                <td>$${item.price}</td>
+                <td>${item.Ticket}</td>
+                <td>${item.Hours}</td>
+                <td>$${item.Price}</td>
               </tr>
             `).join('')}
           </tbody>

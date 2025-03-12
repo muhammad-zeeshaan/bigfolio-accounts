@@ -94,7 +94,7 @@ export async function SendInvoice(req: SendInvoiceRequestType): Promise<{ messag
     }
 
     try {
-        const html = InvoiceTemplate({ invoiceData });
+        const html = InvoiceTemplate({ invoiceData: { ...invoiceData, items: invoiceData.items.map(item => ({ Ticket: item.ticket, Hours: item.hours, Price: item.price })) } });
         const pdfBuffer = await generatePDF(html);
 
         const mailOptions: MailOptions = {

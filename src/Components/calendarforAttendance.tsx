@@ -20,7 +20,7 @@ import {
   message,
 } from "antd";
 import type { Dayjs } from "dayjs";
-import { AttendanceRecord, AttendanceSummary, Employee, ErrorResponse, SalaryFormData, SessionUser } from "@/app/types";
+import { AttendanceRecord, AttendanceSummary, Employee, EmployeeSalaryDTO, ErrorResponse, SalaryFormData, SessionUser } from "@/app/types";
 import EditAttendanceModal from './editAttendanceModal';
 import { ArrowDownOutlined, ArrowLeftOutlined, ArrowUpOutlined, CheckCircleOutlined, CoffeeOutlined, EditOutlined, LogoutOutlined, RetweetOutlined } from '@ant-design/icons';
 import { Pie } from "@ant-design/plots";
@@ -37,6 +37,7 @@ interface CalendarCompProps {
   attendanceDetails: AttendanceSummary;
   userData: Employee | ErrorResponse;
 }
+
 
 const getListData = (value: Dayjs, attendanceDetails: AttendanceSummary) => {
     const userMap: Record<string, { checkInTime: string; checkOutTime: string; breaks: string[] }> = {};
@@ -87,7 +88,7 @@ const CalendarComp: React.FC<CalendarCompProps> = ({ attendanceDetails, userData
   const [invoiceModalVisible, setInvoiceModalVisible] = useState<boolean>(false);
   const [previewImage, setPreviewImage] = useState<string | null>(null);
   const [isSalaryModalOpen, setSalaryModalOpen] = useState<boolean>(false);
-  const [singleEmployee, setSingleEmployee] = useState<Employee | null>(null);
+  const [singleEmployee, setSingleEmployee] = useState<EmployeeSalaryDTO | null>(null);
   const [userId, setUserId] = useState<string>("");
   useEffect(() => {
     getSession().then((session) => {
@@ -278,11 +279,9 @@ const CalendarComp: React.FC<CalendarCompProps> = ({ attendanceDetails, userData
           params.update();
       };
   const handleInvoiceSubmit = (values: SalaryFormData) => {
-    console.log('Received values of form: ', values);
-    // setSingleEmployee({ ...userData, ...values });
-    console.log("=========>", { ...userData, ...values })
-    console.log(setSingleEmployee)
-    // setInvoiceModalVisible(true)
+    const dataCopy = { ...userData, ...values }
+    setSingleEmployee(dataCopy as unknown as EmployeeSalaryDTO)
+    setSalaryModalOpen(true)
   };
     return (
       <>
@@ -420,7 +419,7 @@ const CalendarComp: React.FC<CalendarCompProps> = ({ attendanceDetails, userData
             </Form.Item>
           </Form>
         </Modal>
-        <Modal open={isSalaryModalOpen} onClose={() => setSalaryModalOpen(false)}>
+        <Modal open={isSalaryModalOpen} onCancel={() => setSalaryModalOpen(false)}>
           {singleEmployee && <SalarySlip employeedetail={singleEmployee} />}
         </Modal>
       </>

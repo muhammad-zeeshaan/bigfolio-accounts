@@ -5,7 +5,6 @@ import Modal from '@/Components/Modal';
 import EmployeeForm from '@/Components/EmployeeForm';
 import { Button, message } from 'antd';
 import { Employee } from '@/app/types';
-import SalarySlip from '@/Components/Slip';
 import columns from '@/app/columns/employeeColumns';
 import { useRouter } from 'next/navigation';
 import { trpc } from '@/utils/trpcClient';
@@ -103,7 +102,7 @@ export default function EmployeeManagement({ employees, totalRecords, limit, cur
         if (!selectedRowKeys.length) return;
         await sendSalarySlipMutation.mutateAsync({ employeeIds: selectedRowKeys });
     };
-
+    console.log(isSalaryModalOpen)
     return (
         <>
             <h1 className="text-2xl font-bold mb-6">Employee Management</h1>
@@ -153,9 +152,9 @@ export default function EmployeeManagement({ employees, totalRecords, limit, cur
                     />
                 </>
             </Modal>
-            <Modal isOpen={isSalaryModalOpen} onClose={() => setSalaryModalOpen(false)}>
+            {/* <Modal isOpen={isSalaryModalOpen} onClose={() => setSalaryModalOpen(false)}>
                 {singleEmployee && <SalarySlip employeedetail={singleEmployee} />}
-            </Modal>
+            </Modal> */}
         </>
     );
 }

@@ -47,8 +47,8 @@ export const InvoiceModal: React.FC<{
             .filter(d => d.getDay() !== 0 && d.getDay() !== 6).length;
     };
     const oneDaySalary = salaryData.basicSalary / getWeekdaysInMonth();
-    const workingDays = getWeekdaysInMonth() - attendanceDetails.totalAbsents || 0;
-    const workingDaysPayment = Number(attendanceDetails.totalPresent) * oneDaySalary;
+    const workingDays = Number(attendanceDetails.totalPresent || 0) + Number(attendanceDetails.overtimeDays || 0);
+    const workingDaysPayment = Number(attendanceDetails.totalPresent || 0) * oneDaySalary;
     const overtimePayment = salaryData.overtime * oneDaySalary;
     const totalSalary = (workingDaysPayment + overtimePayment + salaryData.bonus + salaryData.allowance) - salaryData.tax;
     return (
@@ -61,7 +61,7 @@ export const InvoiceModal: React.FC<{
                 <Button key="submit" type="primary" onClick={() => form.submit()}>Generate Invoice</Button>,
             ]}
         >
-            <Form form={form} layout="vertical" onFinish={onFinish}>
+            <Form form={form} layout="vertical" onFinish={(e) => onFinish({ ...e, total: totalSalary, overTimePayment: overtimePayment, totalWorkingDays: getWeekdaysInMonth(), subTotal: workingDaysPayment })}>
                 <Row gutter={16}>
                     <Col span={12}><Form.Item label="Total Present" name="totalPresent"><InputNumber disabled style={{ width: "100%" }} /></Form.Item></Col>
                     <Col span={12}><Form.Item label="Total Absent" name="totalAbsent"><InputNumber disabled style={{ width: "100%" }} /></Form.Item></Col>

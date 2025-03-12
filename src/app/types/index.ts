@@ -94,9 +94,9 @@ export interface SignUpFormData {
     personalEmail: string;
 }
 export interface InvoiceItem {
-    ticket: string;
-    hours: number;
-    price: number;
+    Ticket: string;
+    Hours: number;
+    Price: number;
 }
 export interface invoiceToDTO {
     invoiceItem: string;
@@ -137,4 +137,25 @@ export interface SalaryFormData {
     tax: number;
     totalPresent: number;
     totalAbsent: number;
+}
+export interface EmployeeSalaryDTO {
+    _id: string;
+    name: string;
+    email: string;
+    personalEmail: string;
+    phone: string;
+    jobStatus: string;
+    basicSalary: number;
+    allowance: number;
+    bonus: number;
+    overtime: number;
+    tax: number;
+    holiday: number;
+    designation: string;
+    totalPresent: number;
+    totalAbsent: number;
+    total: number;
+    subTotal: number;
+    totalWorkingDays: number;
+    overTimePayment: number;
 }
