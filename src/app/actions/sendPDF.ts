@@ -119,3 +119,35 @@ export async function SendInvoice(req: SendInvoiceRequestType): Promise<{ messag
         return { message: 'Internal server error', error: errorMessage };
     }
 }
+
+export const sendInvoiceEmail = async (emails: string[],
+    pdfBase64: string,
+    ccEmails?: string[]) => {
+    try {
+        // Convert Base64 string to a buffer
+        const pdfBuffer = Buffer.from(pdfBase64.split(',')[1], 'base64');
+
+        // Email options
+        const mailOptions = {
+            from: process.env.EMAIL_USER,
+            to: emails.join(','),
+            cc: ccEmails && ccEmails.length > 0 ? ccEmails.join(',') : undefined,
+            subject: 'Your Invoice',
+            text: 'Please find your invoice attached.',
+            attachments: [
+                {
+                    filename: 'invoice.pdf',
+                    content: pdfBuffer,
+                    contentType: 'application/pdf',
+                },
+            ],
+        };
+
+        await transporter.sendMail(mailOptions);
+
+        return { success: true, message: 'Email sent successfully!' };
+    } catch (error) {
+        console.error('Error sending email:', error);
+        throw new Error('Failed to send email.');
+    }
+};

@@ -1,4 +1,4 @@
-import { AddDocumentSchema, addEmployeeSchema, DeleteDocumentSchema, editEmployeeSchema, employeeIdSchema, fetchEmployeesSchema, SendInvoiceSchema, SendSalarySlipRequestSchema, UpdateDocumentsSchema, UpdateProfileImageSchema } from '@/app/validations/userSchema';
+import { AddDocumentSchema, addEmployeeSchema, DeleteDocumentSchema, editEmployeeSchema, emailSchema, employeeIdSchema, fetchEmployeesSchema, SendInvoiceSchema, SendSalarySlipRequestSchema, UpdateDocumentsSchema, UpdateProfileImageSchema } from '@/app/validations/userSchema';
 import { protectedProcedure, router,publicProcedure } from "../init";
 import {
     fetchEmployees,
@@ -11,7 +11,7 @@ import {
     addEmployeeDocument,
     deleteEmployeeDocument
 } from "./controller";
-import { SendInvoice, SendSalarySlip } from '@/app/actions/sendPDF';
+import { SendInvoice, sendInvoiceEmail, SendSalarySlip } from '@/app/actions/sendPDF';
 
 const employeeRouter = router({
     fetchEmployees: publicProcedure
@@ -46,11 +46,14 @@ const employeeRouter = router({
     addEmployeeDocument: protectedProcedure
         .input(AddDocumentSchema)
         .mutation(({ input }) => addEmployeeDocument(input.employeeId, input.document)),
-
     deleteEmployeeDocument: protectedProcedure
         .input(DeleteDocumentSchema)
         .mutation(({ input }) => deleteEmployeeDocument(input.employeeId, input.document)),
-
+    sendInvoiceEmail: publicProcedure
+        .input(emailSchema)
+        .mutation(async ({ input }) => {
+            return sendInvoiceEmail(input.emails, input.pdfBase64, input.ccEmails);
+        }),
 });
 
 export default employeeRouter;

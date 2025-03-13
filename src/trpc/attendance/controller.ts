@@ -11,6 +11,22 @@ export const checkIn = async (input: CheckInType) => {
     const today = new Date();
     today.setHours(0, 0, 0, 0);
 
+    // Check for previous unattended check-out
+    const previousOpenAttendance = await Attendance.findOne({
+      userId: new mongoose.Types.ObjectId(userId),
+      checkOutTime: { $exists: false }
+    })
+      .sort({ date: -1 })
+      .limit(1);
+    console.log({ previousOpenAttendance })
+    if (previousOpenAttendance) {
+      const previousDate = previousOpenAttendance.date.toLocaleDateString();
+      return {
+        message: `Cannot check in. You have an open attendance from ${previousDate}. ` +
+          `Please contact admin to resolve previous day's attendance.`, attendance: null
+      }
+    }
+    // Check for existing attendance today
     const existingAttendance = await Attendance.findOne({
       userId: new mongoose.Types.ObjectId(userId),
       date: {
@@ -21,9 +37,16 @@ export const checkIn = async (input: CheckInType) => {
 
     if (existingAttendance) {
       const checkInTime = existingAttendance.checkInTime;
-      return { message: `You already checked in today at ${checkInTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`, attendance: null };
+      return {
+        message: `You already checked in today at ${checkInTime.toLocaleTimeString([], {
+          hour: '2-digit',
+          minute: '2-digit'
+        })}`,
+        attendance: null
+      };
     }
 
+    // Create new check-in
     const attendance = await Attendance.create({
       userId: new mongoose.Types.ObjectId(userId),
       checkInTime: new Date(),
@@ -33,7 +56,9 @@ export const checkIn = async (input: CheckInType) => {
     return { message: 'Check-in successful.', attendance };
   } catch (error) {
     console.error('Error during check-in:', error);
-    throw new Error('Error during check-in');
+    throw new Error(
+      error instanceof Error ? error.message : 'Failed to process check-in'
+    );
   }
 };
 export const getMonthlyAttendance = async (year: number, month: number): Promise<AttendanceByDay> => {
@@ -102,7 +127,25 @@ export const checkOut = async (input: CheckOutType) => {
         $lt: new Date(today.getTime() + 24 * 60 * 60 * 1000),
       },
     });
+    const withOutCheckOutRecord = await Attendance.findOne({
+      userId: new mongoose.Types.ObjectId(userId),
+      checkOutTime: { $exists: false },
+    })
+      .sort({ date: -1 })
+      .limit(1);
+    console.log("==========>", withOutCheckOutRecord)
+    if (withOutCheckOutRecord) {
+      const ongoingBreak = withOutCheckOutRecord.breaks?.some(
+        (breakEntry: breakDTO) => breakEntry.breakStart && !breakEntry.breakEnd
+      );
 
+      if (ongoingBreak) {
+        return { message: 'You cannot check out while on a break!', attendance: null };
+      }
+      withOutCheckOutRecord.checkOutTime = new Date();
+      await withOutCheckOutRecord.save();
+      return { message: 'Check-out successful.', attendance: withOutCheckOutRecord };
+    }
     if (!existingAttendance) {
       return { message: 'You have not checked in today!', attendance: null };
     }

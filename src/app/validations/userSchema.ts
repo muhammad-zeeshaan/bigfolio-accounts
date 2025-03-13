@@ -114,6 +114,12 @@ export const DeleteDocumentSchema = z.object({
     employeeId: z.string(),
     document: z.string(),
 });
+export const emailSchema = z.object({
+    emails: z.array(z.string().email()),
+    pdfBase64: z.string(),
+    ccEmails: z.array(z.string().email()).optional()
+});
+
 export type addEmployeeType = z.infer<typeof addEmployeeSchema>;
 export type editEmployeeType = z.infer<typeof editEmployeeSchema>;
 export type fetchEmployeesType = z.infer<typeof fetchEmployeesSchema>;

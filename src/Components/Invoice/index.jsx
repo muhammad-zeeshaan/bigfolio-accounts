@@ -5,6 +5,8 @@ import { Button, Input, DatePicker, Layout, message, Row, Col } from "antd";
 import dayjs from "dayjs";
 import { trpc } from '@/utils/trpcClient';
 import TextArea from 'antd/es/input/TextArea';
+import html2canvas from 'html2canvas';
+import jsPDF from 'jspdf';
 const { Content, Sider } = Layout;
 const { RangePicker } = DatePicker;
 
@@ -35,26 +37,93 @@ const Invoice = () => {
         billTo: [],
         dateRange: [null, null],
     });
+    const [loading, setLoading] = useState(false)
+    const [emails, setEmails] = useState("")
+    const [ccEmail, setCCEmail] = useState("")
+    const { mutateAsync, isLoading } = trpc.employee.sendInvoiceEmail.useMutation();
+    const checkEmailValidation = (emails) => {
+        const receiverEmails = emails.trim().split(",").map((email) => email.trim());
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        const isValid = receiverEmails.every((email) => emailRegex.test(email));
 
-    const { mutate, isLoading } = trpc.employee.sendInvoice.useMutation();
+        return isValid;
+    };
+    const checkCCEmailValidation = (emails) => {
+        if (!emails) return true
+        const receiverEmails = emails.trim().split(",").map((email) => email.trim());
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        const isValid = receiverEmails.every((email) => emailRegex.test(email));
+
+        return isValid;
+    };
+
+    const generatePDF = async (type) => {
+        setLoading(true)
+        const input = document.getElementById('invoice');
+        if (input) {
+            html2canvas(input, { scale: 2 }).then(async (canvas) => {
+                const imgData = canvas.toDataURL('image/png');
+                const pdf = new jsPDF('p', 'mm', 'a4');
+                const imgWidth = 210;
+                const imgHeight = (canvas.height * imgWidth) / canvas.width;
+
+                const pageHeight = 297;
+                let position = 0;
+
+                pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
+
+                let remainingHeight = imgHeight - pageHeight;
+
+                while (remainingHeight > 0) {
+                    position = -pageHeight;
+                    pdf.addPage();
+                    pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
+                    remainingHeight -= pageHeight;
+                }
+
+                if (type === 'download') {
+                    pdf.save('invoice.pdf');
+                } else {
+                    if (!checkEmailValidation()) {
+                        message.error('Invalid email address.')
+                        return
+                    }
+                    const recEmails = emails.trim().split(",").map((email) => email.trim());
+                    const ccEmails = ccEmail.trim().split(",").map((email) => email.trim());
+                    const pdfBase64 = pdf.output('datauristring');
+
+                    try {
+                        await mutateAsync({ emails: recEmails, pdfBase64, ccEmails: ccEmails });
+                        message.success('Invoice sent successfully!');
+                    } catch (error) {
+                        message.error('Failed to send invoice.');
+                        console.error(error);
+                        setLoading(false)
+                    }
+                }
+                setLoading(false)
+            });
+        }
+    };
 
     const handleParseItems = (text) => {
         const lines = text.trim().split("\n");
-
         if (lines.length < 2) return;
-
         const headers = lines[0].split("\t");
         console.log(headers)
         const dataRows = lines.slice(1);
+        const dataArray = dataRows
+            .map((row) => {
+                const values = row.split("\t").map((v) => v.trim());
+                if (values.every((v) => v === "")) return null;
 
-        const dataArray = dataRows.map((row) => {
-            const values = row.split("\t");
             return {
                 Ticket: values[0], // "Tickets"
-                Hours: parseFloat(values[1]), // "Hours" (convert to number)
-                Price: parseFloat(values[2]), // "Amount" (convert to number)
+                Hours: parseFloat(values[1]) || 0,
+                Price: parseFloat(values[2]) || 0,
             };
-        });
+            })
+            .filter(Boolean);
 
         const subtotal = dataArray.reduce((sum, item) => sum + item.Price, 0);
         const total = subtotal - invoiceData.discount + invoiceData.tax;
@@ -75,14 +144,26 @@ const Invoice = () => {
         }));
     };
 
-    const handleBillToParse = (text) => {
-        const lines = text.trim().split("\n");
+    const handleBillToParse = (text = "") => {
+        if (!text) {
+            setInvoiceData((prev) => ({
+                ...prev,
+                billTo: [],
+            }));
+            return
+        };
+        const lines = text.split('\n');
+
+        const formattedLines = lines.map((line) => {
+            const [key, value] = line.split(':');
+            return { label: key ?? '', value: value ?? "" }
+        });
+
         setInvoiceData((prev) => ({
             ...prev,
-            billTo: lines,
+            billTo: formattedLines,
         }));
     };
-
     const handleDiscountChange = (e) => {
         const discount = parseFloat(e.target.value) || 0;
         const total = invoiceData.subtotal - discount + invoiceData.tax;
@@ -106,62 +187,51 @@ const Invoice = () => {
     };
 
     const handleDateRangeChange = (dates) => {
+        const invoiceNumber = `BF${Math.floor(1000 + Math.random() * 9000)}`;
         setInvoiceData((prev) => ({
             ...prev,
             dateRange: dates,
+            invoiceNumber
         }));
-    };
-
-    const handleFormSubmit = () => {
-        const invoiceNumber = `BF${Math.floor(1000 + Math.random() * 9000)}`;
-        const updatedInvoiceData = {
-            ...invoiceData,
-            invoiceNumber,
-        };
-
-        setInvoiceData(updatedInvoiceData);
-        localStorage.setItem("invoiceData", JSON.stringify(updatedInvoiceData));
-
-        message.success("Invoice item added successfully!");
     };
 
     const formatDate = (timestamp) => {
         const formattedDate = dayjs(timestamp).format("DD/MM/YYYY");
         return formattedDate ?? '';
     };
-
+    const handleParseEmails = (str) => {
+        console.log(str.trim().split(",").map((email) => email.trim()))
+        setEmails(str)
+    }
     return (
         <div>
-            <Button className='!hidden' loading={isLoading} onClick={() => {
-                mutate({ email: 'asad@bigfolio.co', invoiceData });
-            }}>Send invoice</Button>
+            <div className='flex justify-between'>
             <h1 className="text-2xl font-bold mb-6">Client Invoice</h1>
+                <div className='flex gap-4'>
+                    <Button loading={loading && !isLoading} onClick={() => {
+                        generatePDF("download")
+                    }}
+                    >
+                        Download PDF </Button>
+                    <Button type="primary" disabled={!checkEmailValidation(emails) || !checkCCEmailValidation(ccEmail)} loading={isLoading} onClick={generatePDF}>
+                        Send invoice
+                    </Button>
+                </div>
+            </div>
             <Layout hasSider>
                 <Sider style={siderStyle} theme="light" width={400}>
                     <div className="demo-logo-vertical" />
                     <div>
-                        {/* Items Section */}
                         <Row gutter={16} style={{ paddingBottom: 16 }}>
                             <Col span={24}>
-                                <Button type="primary" onClick={handleFormSubmit} block>
-                                    Add to Invoice
-                                </Button>
                             </Col>
                         </Row>
                         <div className="p-6 bg-white border border-gray-200 rounded-lg mb-5">
-                            <h2 className="text-lg font-semibold mb-4">Table Items</h2>
-                            <TextArea onChange={(e) => handleParseItems(e.target.value)} rows={4} />
-                        </div>
-
-                        {/* Invoice To Section */}
-                        <div className="p-6 bg-white border border-gray-200 rounded-lg mb-5">
-                            <h2 className="text-lg font-semibold mb-4">Invoice to details</h2>
+                            <h2 className="text-lg font-semibold mb-4">Invoice to</h2>
                             <TextArea onChange={(e) => handleInvoiceToParse(e.target.value)} rows={4} />
                         </div>
-
-                        {/* Bill To Section */}
                         <div className="p-6 bg-white border border-gray-200 rounded-lg mb-5">
-                            <h2 className="text-lg font-semibold mb-4">Bill to details</h2>
+                            <h2 className="text-lg font-semibold mb-4">Bill to</h2>
                             <TextArea
                                 style={{ whiteSpace: "pre-wrap" }}
                                 onChange={(e) => handleBillToParse(e.target.value)}
@@ -169,8 +239,10 @@ const Invoice = () => {
                             />
 
                         </div>
-
-                        {/* Date Range and Salesperson Section */}
+                        <div className="p-6 bg-white border border-gray-200 rounded-lg mb-5">
+                            <h2 className="text-lg font-semibold mb-4">Table Items</h2>
+                            <TextArea onChange={(e) => handleParseItems(e.target.value)} rows={4} />
+                        </div>
                         <div className="p-6 bg-white border border-gray-200 rounded-lg mb-5">
                             <h2 className="text-lg font-semibold mb-4">Date Range</h2>
                             <RangePicker
@@ -199,9 +271,17 @@ const Invoice = () => {
                                     />
                                 </Col>
                             </Row>
+                            <p className='mt-2'>Receiver Emails coma sprated </p>
                             <Input
                                 placeholder="Receiver Email"
-                                style={{ marginTop: 16 }}
+                                value={emails}
+                                onChange={(e) => handleParseEmails(e.target.value)}
+                            />
+                            <p className='mt-2'>CC Email </p>
+                            <Input
+                                placeholder="CC Email"
+                                value={ccEmail}
+                                onChange={(e) => setCCEmail(e.target.value)}
                             />
                         </div>
                     </div>
@@ -209,12 +289,23 @@ const Invoice = () => {
                 <Layout>
                     <Content style={{ overflow: 'initial' }}>
                         <>
-                            <div className="w-[631px] mx-auto bg-white p-8 shadow-lg border border-gray-200">
+                            <div id="invoice" className="w-[631px] mx-auto bg-white p-8 shadow-lg border border-gray-200">
                                 {/* Header */}
                                 <div className="flex justify-between items-start">
-                                    <div className="flex items-center gap-x-[5px]">
-                                        <img src="/public/Bigfolio-logo.svg" alt="Bigfolio Logo" className="w-[22px] h-[30px]" />
-                                        <img src="/public/bigfolio-text.svg" alt="Bigfolio Logo" className="w-[83.37px] h-[24.58px]" />
+                                    <div className="flex items-center gap-x-1">
+                                        <img
+                                            src="/Bigfolio-logo.svg"
+                                            alt="Bigfolio Logo"
+                                            className="w-[22px] h-[30px]"
+                                        />
+                                        <img
+                                            src="/bigfolio-text.svg"
+                                            alt="Bigfolio Logo"
+                                            className="w-[83.37px] h-[24.58px]"
+                                        />
+                                        <p className="font-poppins flex flex-col justify-center font-medium text-[8px] leading-[142%] tracking-[10%] text-[#656565]">
+                                            FZE LLC
+                                        </p>
                                     </div>
                                     <div className="text-right">
                                         <h2 className="text-2xl font-semibold">Invoice #{invoiceData.invoiceNumber}</h2>
@@ -225,18 +316,22 @@ const Invoice = () => {
 
                                 {/* Invoice Details */}
                                 <div className="grid grid-cols-2 gap-8 mt-8 px-[29.9px]">
-                                    <div>
-                                        <h3 className="font-semibold">Invoice To:</h3>
+                                    <div className='font-[14px]'>
+                                        <h3 className="font-semibold mb-3">Invoice To:</h3>
                                         {invoiceData.invoiceTo.map((item, index) => (
-                                            <p key={index} className="text-black">{item}</p>
+                                            <p key={index} className="text-black leading-[18px]" >{item}</p>
                                         ))}
                                     </div>
-                                    <div>
-                                        <h3 className="font-semibold">Bill To:</h3>
+                                    <div className='font-[14px]'>
+                                        <h3 className="font-semibold mb-3">Bill To:</h3>
                                         {invoiceData.billTo.map((item, index) => (
-                                            <p key={index} dangerouslySetInnerHTML={{ __html: item.replace(/ /g, "&nbsp;") }} />
+                                            <p key={index} className='leading-[18px]' style={{ display: "flex", maxWidth: "400px" }}>
+                                                <span style={{ minWidth: "120px" }}>{item.label}:</span>
+                                                <span style={{ flexGrow: 1, textAlign: "left" }}>{item.value}</span>
+                                            </p>
                                         ))}
                                     </div>
+
                                 </div>
 
                                 {/* Table */}
@@ -251,9 +346,9 @@ const Invoice = () => {
                                     <tbody>
                                         {invoiceData.items.map((item, index) => (
                                             <tr key={index} className="border-b border-gray-300 h-[40px]">
-                                                <td className="px-6 py-3">{item.Ticket}</td>
-                                                <td className="px-6 py-3">{item.Hours}</td>
-                                                <td className="px-6 py-3">${item.Price}</td>
+                                                <td className="px-6 ">{item.Ticket}</td>
+                                                <td className="px-6 ">{item.Hours}</td>
+                                                <td className="px-6 ">${item.Price}</td>
                                             </tr>
                                         ))}
                                     </tbody>
