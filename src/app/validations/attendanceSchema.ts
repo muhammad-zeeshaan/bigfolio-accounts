@@ -30,7 +30,7 @@ export const updateAttendanceSchema = z.object({
         .array(
             z.object({
                 breakStart: z.string().datetime(),
-                breakEnd: z.string().datetime(),
+                breakEnd: z.string().datetime().nullable(),
             })
         )
         .optional(),

@@ -84,7 +84,7 @@ const Invoice = () => {
                 if (type === 'download') {
                     pdf.save('invoice.pdf');
                 } else {
-                    if (!checkEmailValidation()) {
+                    if (!checkEmailValidation(emails)) {
                         message.error('Invalid email address.')
                         return
                     }
@@ -289,7 +289,7 @@ const Invoice = () => {
                 <Layout>
                     <Content style={{ overflow: 'initial' }}>
                         <>
-                            <div id="invoice" className="w-[631px] mx-auto bg-white p-8 shadow-lg border border-gray-200">
+                            <div id="invoice" className="w-[782px] mx-auto bg-white p-8 shadow-lg border border-gray-200">
                                 {/* Header */}
                                 <div className="flex justify-between items-start">
                                     <div className="flex items-center gap-x-1">

@@ -14,16 +14,17 @@ export const checkIn = async (input: CheckInType) => {
     // Check for previous unattended check-out
     const previousOpenAttendance = await Attendance.findOne({
       userId: new mongoose.Types.ObjectId(userId),
-      checkOutTime: { $exists: false }
+      $or: [
+        { checkOutTime: { $exists: false } },
+        { checkOutTime: null }
+      ]
     })
       .sort({ date: -1 })
       .limit(1);
-    console.log({ previousOpenAttendance })
     if (previousOpenAttendance) {
       const previousDate = previousOpenAttendance.date.toLocaleDateString();
       return {
-        message: `Cannot check in. You have an open attendance from ${previousDate}. ` +
-          `Please contact admin to resolve previous day's attendance.`, attendance: null
+        message: `Cannot check in. You have an open attendance from ${previousDate}. `, attendance: null
       }
     }
     // Check for existing attendance today
@@ -129,11 +130,13 @@ export const checkOut = async (input: CheckOutType) => {
     });
     const withOutCheckOutRecord = await Attendance.findOne({
       userId: new mongoose.Types.ObjectId(userId),
-      checkOutTime: { $exists: false },
+      $or: [
+        { checkOutTime: { $exists: false } },
+        { checkOutTime: null }
+      ]
     })
       .sort({ date: -1 })
       .limit(1);
-    console.log("==========>", withOutCheckOutRecord)
     if (withOutCheckOutRecord) {
       const ongoingBreak = withOutCheckOutRecord.breaks?.some(
         (breakEntry: breakDTO) => breakEntry.breakStart && !breakEntry.breakEnd
@@ -180,7 +183,25 @@ export const startBreak = async (input: StartBreakType) => {
   try {
     const today = new Date();
     today.setHours(0, 0, 0, 0);
-
+    const withOutCheckOutRecord = await Attendance.findOne({
+      userId: new mongoose.Types.ObjectId(userId),
+      $or: [
+        { checkOutTime: { $exists: false } },
+        { checkOutTime: null }
+      ]
+    })
+      .sort({ date: -1 })
+      .limit(1);
+    if (withOutCheckOutRecord) {
+      const lastBreak = withOutCheckOutRecord.breaks[withOutCheckOutRecord.breaks.length - 1];
+      if (lastBreak && !lastBreak.breakEnd) {
+        return { message: 'You are already on a break!', attendance: null };
+      } else {
+        withOutCheckOutRecord.breaks.push({ breakStart: new Date() });
+        await withOutCheckOutRecord.save();
+        return { message: 'Break started successfully.', attendance: withOutCheckOutRecord.toObject() };
+      }
+    }
     const attendance = await Attendance.findOne({
       userId: new mongoose.Types.ObjectId(userId),
       date: {
@@ -194,10 +215,11 @@ export const startBreak = async (input: StartBreakType) => {
     }
     if (attendance.checkOutTime) {
       return { message: 'You have already checked out! Cannot start a break.', attendance: null };
-  }
+    }
 
     const lastBreak = attendance.breaks[attendance.breaks.length - 1];
     if (lastBreak && !lastBreak.breakEnd) {
+
       return { message: 'You are already on a break!', attendance: null };
     }
 
@@ -216,7 +238,23 @@ export const endBreak = async (input: EndBreakType) => {
   try {
     const today = new Date();
     today.setHours(0, 0, 0, 0);
-
+    const withOutCheckOutRecord = await Attendance.findOne({
+      userId: new mongoose.Types.ObjectId(userId),
+      $or: [
+        { checkOutTime: { $exists: false } },
+        { checkOutTime: null }
+      ]
+    })
+      .sort({ date: -1 })
+      .limit(1);
+    if (withOutCheckOutRecord) {
+      const lastBreak = withOutCheckOutRecord.breaks[withOutCheckOutRecord.breaks.length - 1];
+      if (lastBreak && !lastBreak.breakEnd) {
+        lastBreak.breakEnd = new Date();
+        await withOutCheckOutRecord.save();
+        return { message: 'Break ended successfully.', attendance: withOutCheckOutRecord.toObject() };
+      }
+    }
     const attendance = await Attendance.findOne({
       userId: new mongoose.Types.ObjectId(userId),
       date: {

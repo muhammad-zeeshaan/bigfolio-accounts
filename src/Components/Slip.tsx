@@ -1,9 +1,15 @@
 import { EmployeeSalaryDTO } from '@/app/types';
-import React from "react";
+import React, { useState } from "react";
+import { trpc } from '@/utils/trpcClient';
+import html2canvas from 'html2canvas';
+import jsPDF from 'jspdf';
+import { Button, message } from 'antd';
+// import { jsPDF } from "jspdf";
 
 const SalarySlip = ({ employeedetail }: { employeedetail: EmployeeSalaryDTO }) => {
     const { bonus, allowance, overtime, tax, totalWorkingDays, overTimePayment, totalPresent, subTotal, total } = employeedetail;
-
+    const [loading, setLoading] = useState<boolean>(false);
+    const { mutateAsync, isLoading } = trpc.employee.sendInvoiceEmail.useMutation();
     const salaryMonth = (): string => {
         const currentDate = new Date();
         const day = String(currentDate.getDate()).padStart(2, '0');
@@ -12,16 +18,75 @@ const SalarySlip = ({ employeedetail }: { employeedetail: EmployeeSalaryDTO }) =
 
         return `${day}/${month}/${year}`;
     };
-
+    console.log(loading, isLoading)
     const workingDays = totalPresent + overtime;
     function capitalizeFirstLetter(str: string) {
         if (!str) return str;
         const updatedString = str.split('_').join(' ')
         return updatedString.charAt(0).toUpperCase() + str.slice(1);
     }
+    const generatePDF = async (type: string) => {
+        setLoading(true);
+        const input = document.getElementById('invoice');
 
+        if (input) {
+            const canvas = await html2canvas(input, {
+                scale: 3,
+                useCORS: true,
+                backgroundColor: '#ffffff',
+            });
+
+            const imgData = canvas.toDataURL('image/png');
+
+            const pdf = new jsPDF({
+                orientation: 'p', // Portrait mode
+                unit: 'mm',
+                format: 'a4',
+            });
+
+            const imgWidth = 210;
+            const pageHeight = 297;
+            const imgHeight = (canvas.height * imgWidth) / canvas.width;
+
+            let yPosition = 0;
+
+            if (imgHeight > pageHeight) {
+                while (yPosition < imgHeight) {
+                    pdf.addImage(imgData, 'PNG', 0, -yPosition, imgWidth, imgHeight);
+                    yPosition += pageHeight;
+                    if (yPosition < imgHeight) pdf.addPage();
+                }
+            } else {
+                pdf.addImage(imgData, 'PNG', 0, 0, imgWidth, imgHeight);
+            }
+
+            if (type === 'download') {
+                pdf.save('invoice.pdf');
+            } else {
+                const pdfBase64 = pdf.output('datauristring');
+                try {
+                    await mutateAsync({ emails: [employeedetail.email ?? ""], pdfBase64 });
+                    message.success('Invoice sent successfully!');
+                } catch (error) {
+                    message.error('Failed to send invoice.');
+                    console.error(error);
+                    setLoading(false)
+                }
+            }
+            setLoading(false);
+        }
+    };
+    const details = [
+        { label: `Basic Salary (${workingDays} out of ${totalWorkingDays} working days)`, value: subTotal },
+        { label: "Overtime", value: overTimePayment },
+        { label: "Allowance", value: allowance },
+        { label: "Bonus", value: bonus },
+        { label: "Tax", value: -tax },
+    ];
+    console.log({ employeedetail })
     return (
-        <div className='mt-6'>
+        <div>
+            <div id='invoice' className='mt-6 p-10'>
             {/* Header */}
             <div className="flex justify-between items-start ">
                 <div className="flex items-center gap-x-[5px]">
@@ -48,27 +113,13 @@ const SalarySlip = ({ employeedetail }: { employeedetail: EmployeeSalaryDTO }) =
                     </tr>
                 </thead>
                 <tbody>
-                    <tr className="border-b border-gray-300 h-[40px]">
-                        <td className="px-6 py-3">Basic Salary ({workingDays} out of {totalWorkingDays} working days)</td>
-                        <td className="px-6 py-3 text-right">{subTotal.toFixed(2)}</td>
-                    </tr>
-                    <tr className="border-b border-gray-300 h-[40px]">
-                        <td className="px-6 py-3">Overtime</td>
-                        <td className="px-6 py-3 text-right">{overTimePayment.toFixed(2)}</td>
-                    </tr>
-                    <tr className="border-b border-gray-300 h-[40px]">
-                        <td className="px-6 py-3">Allowance</td>
-                        <td className="px-6 py-3 text-right">{allowance.toFixed(2)}</td>
-                    </tr>
-                    <tr className="border-b border-gray-300 h-[40px]">
-                        <td className="px-6 py-3">Bonus</td>
-                        <td className="px-6 py-3 text-right">{bonus.toFixed(2)}</td>
-                    </tr>
-                    <tr className="border-b border-gray-300 h-[40px]">
-                        <td className="px-6 py-3">Tax</td>
-                        <td className="px-6 py-3 text-right">-{tax.toFixed(2)}</td>
-                    </tr>
-                </tbody>
+                        {details.map((item, index) => (
+                            <tr key={index} className="border-b border-gray-300 h-[40px]">
+                                <td className="px-6 py-3">{item.label}</td>
+                                <td className="px-6 py-3 text-right">{item.value.toFixed(2)}</td>
+                            </tr>
+                        ))}
+                    </tbody>
             </table>
 
             <div className='mt-6 flex justify-end'>
@@ -85,6 +136,11 @@ const SalarySlip = ({ employeedetail }: { employeedetail: EmployeeSalaryDTO }) =
             <div className="flex space-x-4">
                 <div className="flex-1">Business Centre, Sharjah Publishing City Free Zone, UAE</div>
                 <div className="flex-1">+971 58 549 2071<br />hello@bigfolio.co</div>
+            </div>
+            </div>
+            <div className='flex justify-end gap-2'>
+                <Button onClick={() => generatePDF("download")}>Download Slip</Button>
+                <Button type='primary' onClick={() => generatePDF("send")}>Send Slip</Button>
             </div>
         </div>
     );

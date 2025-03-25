@@ -45,6 +45,7 @@ const AdminLayout: React.FC<LayoutProps> = ({ children, session }) => {
         { key: 'home', label: 'Home', href: '/' },
         { key: 'admin', label: 'Employee', href: '/admin' },
         { key: 'history', label: 'History', href: '/admin/history' },
+        { key: 'calendar', label: 'Calender', href: '/admin/calendar' },
         { key: 'invoice', label: 'Invoice', href: '/admin/invoice' },
         { key: 'letter', label: 'Letter', href: '/admin/letter' },
     ];

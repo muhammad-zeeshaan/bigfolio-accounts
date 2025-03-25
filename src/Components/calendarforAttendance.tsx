@@ -423,7 +423,7 @@ const CalendarComp: React.FC<CalendarCompProps> = ({ attendanceDetails, userData
             </Form.Item>
           </Form>
         </Modal>
-        <Modal open={isSalaryModalOpen} onCancel={() => setSalaryModalOpen(false)}>
+        <Modal open={isSalaryModalOpen} footer={null} width={782} onCancel={() => setSalaryModalOpen(false)}>
           {singleEmployee && <SalarySlip employeedetail={singleEmployee} />}
         </Modal>
       </>
