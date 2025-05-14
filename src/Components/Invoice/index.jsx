@@ -5,8 +5,6 @@ import { Button, Input, DatePicker, Layout, message, Row, Col } from "antd";
 import dayjs from "dayjs";
 import { trpc } from '@/utils/trpcClient';
 import TextArea from 'antd/es/input/TextArea';
-import html2canvas from 'html2canvas';
-import jsPDF from 'jspdf';
 const { Content, Sider } = Layout;
 const { RangePicker } = DatePicker;
 
@@ -58,53 +56,69 @@ const Invoice = () => {
     };
 
     const generatePDF = async (type) => {
-        setLoading(true)
-        const input = document.getElementById('invoice');
-        if (input) {
-            html2canvas(input, { scale: 2 }).then(async (canvas) => {
-                const imgData = canvas.toDataURL('image/png');
-                const pdf = new jsPDF('p', 'mm', 'a4');
-                const imgWidth = 210;
-                const imgHeight = (canvas.height * imgWidth) / canvas.width;
+        setLoading(true);
+        let dataCopy = { ...invoiceData };
+        dataCopy.dateRange = dataCopy.dateRange.map((date) =>
+            date ? dayjs(date).format("DD/MM/YYYY") : null
+        );
 
-                const pageHeight = 297;
-                let position = 0;
-
-                pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
-
-                let remainingHeight = imgHeight - pageHeight;
-
-                while (remainingHeight > 0) {
-                    position = -pageHeight;
-                    pdf.addPage();
-                    pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
-                    remainingHeight -= pageHeight;
-                }
-
-                if (type === 'download') {
-                    pdf.save('invoice.pdf');
-                } else {
-                    if (!checkEmailValidation(emails)) {
-                        message.error('Invalid email address.')
-                        return
-                    }
-                    const recEmails = emails.trim().split(",").map((email) => email.trim());
-                    const ccEmails = ccEmail.trim().split(",").map((email) => email.trim());
-                    const pdfBase64 = pdf.output('datauristring');
-
-                    try {
-                        await mutateAsync({ emails: recEmails, pdfBase64, ccEmails: ccEmails });
-                        message.success('Invoice sent successfully!');
-                    } catch (error) {
-                        message.error('Failed to send invoice.');
-                        console.error(error);
-                        setLoading(false)
-                    }
-                }
-                setLoading(false)
+        try {
+            const res = await fetch("/api/generate-invoice", {
+                method: "POST",
+                body: JSON.stringify(dataCopy),
+                headers: {
+                    "Content-Type": "application/json",
+                },
             });
+
+            const blob = await res.blob();
+
+            if (type === "download") {
+                // Download logic
+                const url = window.URL.createObjectURL(blob);
+                const link = document.createElement("a");
+                link.href = url;
+                link.download = "invoice.pdf";
+                link.click();
+            } else {
+               // Email logic
+               if (!checkEmailValidation(emails)) {
+                message.error("Invalid email address.");
+                setLoading(false);
+                return;
+            }
+
+               const recEmails = emails.trim().split(",").map((email) => email.trim());
+               const ccEmails = ccEmail.trim().split(",").map((email) => email.trim());
+
+               // Convert blob to Base64
+               const base64 = await new Promise((resolve, reject) => {
+                   const reader = new FileReader();
+                   reader.onloadend = () => {
+                       const result = reader.result;
+                       const base64String = result.split(",")[1]; // Remove data:application/pdf;base64,
+                       resolve(base64String);
+                   };
+                   reader.onerror = reject;
+                   reader.readAsDataURL(blob);
+               });
+
+               await mutateAsync({
+                   emails: recEmails,
+                   pdfBase64: base64,
+                   ccEmails: ccEmails,
+               });
+
+                message.success("Invoice sent successfully!");
+            }
+        } catch (error) {
+            message.error("Something went wrong!");
+            console.error(error);
+        } finally {
+            setLoading(false);
         }
     };
+
 
     const handleParseItems = (text) => {
         const lines = text.trim().split("\n");
@@ -289,7 +303,7 @@ const Invoice = () => {
                 <Layout>
                     <Content style={{ overflow: 'initial' }}>
                         <>
-                            <div id="invoice" className="w-[782px] mx-auto bg-white p-8 shadow-lg border border-gray-200">
+                            <div id="invoice" className="w-[817px] mx-auto bg-white p-8 shadow-lg border border-gray-200">
                                 {/* Header */}
                                 <div className="flex justify-between items-start">
                                     <div className="flex items-center gap-x-1">
