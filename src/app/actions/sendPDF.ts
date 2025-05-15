@@ -9,6 +9,7 @@ import History from '@/models/History';
 import { SendInvoiceRequestType, SendSalarySlipRequest } from '../validations/userSchema';
 import InvoiceTemplate from '@/Components/InvoiceTemplate';
 import { generateInvoiceHTML } from '../lib/generateInvoiceHTML';
+import { dataImg, logoTextImg } from '../../../public/pdfImg';
 
 async function generatePDF(html: string): Promise<Buffer> {
     const browser = await puppeteer.launch({
@@ -153,8 +154,45 @@ export const sendInvoiceEmail = async (emails: string[],
     }
 };
 
+
 export async function generatePDFinvoice(input: any) {
     const html = generateInvoiceHTML(input.invoiceData);
+    console.log(input)
+    // Extracted and styled header matching the original HTML
+    const headerTemplate = `
+    <div style="width: 100%; font-family: Arial, sans-serif; font-size: 10px; padding: 0 32px 0; box-sizing: border-box; display: flex; justify-content: space-between; align-items: center;">
+      <div style="display: flex; align-items: center; gap: 8px;">
+        <img src=${dataImg} style="width: 22px; height: 30px;" />
+        <img src=${logoTextImg} style="width: 83px; height: 25px;" />
+        <p style="font-size: 8px; color: #656565; margin: 0;">FZE LLC</p>
+      </div>
+      <div style="text-align: right;">
+        <h2 style="margin: 0; font-size: 24px; font-weight: 600;">Invoice #${input.invoiceData.invoiceNumber}</h2>
+        <p style="margin: 2px 0; font-size: 14px;">Date Issued: ${input.invoiceData.dateRange[0]}</p>
+        <p style="margin: 2px 0; font-size: 14px;">Date Due: ${input.invoiceData.dateRange[1]}</p>
+      </div>
+    </div>
+  `;
+
+    // Extracted and styled footer matching the original HTML
+    const footerTemplate = `
+    <div style="width: 100%; font-family: Arial, sans-serif; padding: 0 32px; box-sizing: border-box;">
+      <div style="font-size: 14px; margin-bottom: 6px;">
+        <strong style=" font-weight: bold;">Note:</strong> This invoice is system-generated and does not require a signature or official stamp.
+      </div>
+      <div style="width: 100%; border-top: 1px solid #656565; opacity: 0.2; margin: 10px 0;"></div>
+      <div style="display: flex; justify-content: space-between; font-size: 14px; gap: 32px;">
+        <div>
+          Business Centre, Sharjah Publishing City<br />
+          Free Zone, Sharjah, United Arab Emirates
+        </div>
+        <div style="text-align: right; font-size: 14px;">
+          +1 435-328-2694<br />
+          hello@bigfolio.co
+        </div>
+      </div>
+    </div>
+  `;
 
     const browser = await puppeteer.launch({
         headless: true,
@@ -167,6 +205,15 @@ export async function generatePDFinvoice(input: any) {
     const pdfBuffer = await page.pdf({
         format: 'A4',
         printBackground: true,
+        displayHeaderFooter: true,
+        headerTemplate,
+        footerTemplate,
+        margin: {
+            top: '100px', // Adequate space for header
+            bottom: '100px', // Adequate space for footer
+            // left: '40px',
+            // right: '40px'
+        }
     });
 
     await browser.close();
@@ -174,3 +221,4 @@ export async function generatePDFinvoice(input: any) {
     const base64PDF = Buffer.from(pdfBuffer).toString('base64');
     return { pdfBase64: base64PDF };
 }
+
