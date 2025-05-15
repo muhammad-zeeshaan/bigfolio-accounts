@@ -71,6 +71,7 @@ export function generateInvoiceHTML(invoiceData) {
             display: flex;
             justify-content: space-between;
             margin-top: 32px;
+            padding:0 30px;
           }
           .info-box {
             width: 48%;
@@ -139,22 +140,25 @@ export function generateInvoiceHTML(invoiceData) {
           }
           .footer {
             display: flex;
-            justify-content: space-between;
+            // justify-content: space-between;
             margin-top: auto;
           }
+            .footer div {
+              flex: 1 1 0%;
+            }
             .bill-line {
-  display: flex;
-  max-width: 400px;
-  line-height: 18px;
-  margin: 0;
-}
-.bill-label {
-  min-width: 120px;
-}
-.bill-value {
-  flex-grow: 1;
-  text-align: left;
-}
+              display: flex;
+              max-width: 400px;
+              line-height: 18px;
+              margin: 0;
+            }
+            .bill-label {
+              min-width: 120px;
+            }
+            .bill-value {
+              flex-grow: 1;
+              text-align: left;
+            }
 
         </style>
       </head>
@@ -179,7 +183,7 @@ export function generateInvoiceHTML(invoiceData) {
               ${invoiceData.invoiceTo.map((item) => `<p>${item}</p>`).join('')}
             </div>
             <div class="info-box">
-              <h3>Bill To:</h3>
+              <h3>Payment Details:</h3>
              ${invoiceData.billTo
       .map(
         (item) =>
@@ -219,7 +223,7 @@ export function generateInvoiceHTML(invoiceData) {
 
           <div class="footer-section">
             <div class="note">
-              <strong>Note:</strong> This invoice is system generated and does not require any stamps.
+              <strong>Note:</strong> This invoice is system-generated and does not require a signature or official stamp.
             </div>
             <div class="divider"></div>
             <div class="footer">
@@ -228,7 +232,7 @@ export function generateInvoiceHTML(invoiceData) {
                 Free Zone, Sharjah, United Arab Emirates
               </div>
               <div>
-                +971 58 549 2071<br />
+                +1 435-328-2694<br />
                 hello@bigfolio.co
               </div>
             </div>

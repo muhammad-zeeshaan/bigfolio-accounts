@@ -8,6 +8,7 @@ import SlipTemplate from '@/Components/SlipTemplate';
 import History from '@/models/History';
 import { SendInvoiceRequestType, SendSalarySlipRequest } from '../validations/userSchema';
 import InvoiceTemplate from '@/Components/InvoiceTemplate';
+import { generateInvoiceHTML } from '../lib/generateInvoiceHTML';
 
 async function generatePDF(html: string): Promise<Buffer> {
     const browser = await puppeteer.launch({
@@ -151,3 +152,25 @@ export const sendInvoiceEmail = async (emails: string[],
         throw new Error('Failed to send email.');
     }
 };
+
+export async function generatePDFinvoice(input: any) {
+    const html = generateInvoiceHTML(input.invoiceData);
+
+    const browser = await puppeteer.launch({
+        headless: true,
+        args: ['--no-sandbox', '--disable-setuid-sandbox'],
+    });
+
+    const page = await browser.newPage();
+    await page.setContent(html, { waitUntil: 'networkidle0' });
+
+    const pdfBuffer = await page.pdf({
+        format: 'A4',
+        printBackground: true,
+    });
+
+    await browser.close();
+
+    const base64PDF = Buffer.from(pdfBuffer).toString('base64');
+    return { pdfBase64: base64PDF };
+}

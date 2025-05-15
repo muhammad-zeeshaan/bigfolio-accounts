@@ -95,7 +95,7 @@ export default function Letter() {
     return (
         <div>
             <div className='flex justify-between'>
-                <h1 className="text-2xl font-bold mb-6">Letter</h1>
+                <h1 className="text-2xl font-bold mb-6">Letter Head</h1>
                 <div className='flex gap-4'>
                     <Button loading={loading && !isLoading} onClick={() => {
                         generatePDF("download")
@@ -108,8 +108,7 @@ export default function Letter() {
                 </div>
             </div>
             <div className="flex justify-between items-start gap-8 p-8 bg-gray-50 min-h-screen">
-            {/* Left Side: Input and Button */}
-                <div className="flex flex-col gap-6 w-[300px]">
+                <div className="flex flex-col bg-red-500 gap-6 w-[300px]">
                     <div className="flex flex-col gap-4">
                         <p className="text-sm text-gray-600">Letter Heading</p>
                         <Input
@@ -158,82 +157,76 @@ export default function Letter() {
                             className="!w-full p-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                         />
                     </div>
-            </div>
-
-            {/* Right Side: Content Container */}
-                <div id="invoice" className="w-[782px] bg-white p-8 shadow-xl rounded-lg border border-gray-200">
-                {/* Header */}
-                <div className="flex justify-between items-start mb-8">
-                        <div className="flex items-center gap-x-2">
-                            <img
-                                src="/Bigfolio-logo.svg"
-                                alt="Bigfolio Logo"
-                                className="w-[22px] h-[30px]"
-                            />
-                            <img
-                                src="/bigfolio-text.svg"
-                                alt="Bigfolio Logo"
-                                className="w-[83.37px] h-[24.58px]"
-                            />
-                            <p className="font-poppins flex flex-col justify-center font-medium text-[8px] leading-[142%] tracking-[10%] text-[#656565]">
-                                FZE LLC
-                            </p>
-                        </div>
-                    <div className="text-right">
-                        <p className="font-poppins font-semibold text-[18px] text-gray-800">
-                            {heading}
-                        </p>
-                    </div>
                 </div>
 
-                {/* Content */}
-                <div className="mt-8">
-                    {!submit ? (
-                        <Editor
-                            value={content}
-                            apiKey="ootvnqk3gfzqj30whhefn6nxm1pi0www26ghg12fz077yzmf"
-                            init={{
-                                height: 500,
-                                menubar: false,
-                                plugins: [
-                                    "advlist autolink lists link image charmap print preview anchor",
-                                    "searchreplace visualblocks code fullscreen",
-                                    "insertdatetime media table paste code help wordcount",
-                                ],
-                                toolbar:
-                                    "undo redo | formatselect | bold italic backcolor | \
+                <div className='w-full flex justify-center'>
+                    <div id="invoice" className="w-[782px] bg-white p-8 rounded-[8px] border border-gray-200">
+                        <div className="flex justify-between items-start mb-8">
+                            <div className="flex items-center gap-x-2">
+                                <img
+                                    src="/Bigfolio-logo.svg"
+                                    alt="Bigfolio Logo"
+                                    className="w-[22px] h-[30px]"
+                                />
+                                <img
+                                    src="/bigfolio-text.svg"
+                                    alt="Bigfolio Logo"
+                                    className="w-[83.37px] h-[24.58px]"
+                                />
+                                <p className="font-poppins flex flex-col justify-center font-medium text-[8px] leading-[142%] tracking-[10%] text-[#656565]">
+                                    FZE LLC
+                                </p>
+                            </div>
+                            <div className="text-right">
+                                <p className="font-poppins font-semibold text-[18px] text-gray-800">
+                                    {heading}
+                                </p>
+                            </div>
+                        </div>
+
+                        {/* Content */}
+                        <div className="mt-8">
+                            {!submit ? (
+                                <Editor
+                                    value={content}
+                                    apiKey="ootvnqk3gfzqj30whhefn6nxm1pi0www26ghg12fz077yzmf"
+                                    init={{
+                                        height: 500,
+                                        menubar: false,
+                                        plugins: [
+                                            "advlist autolink lists link image charmap print preview anchor",
+                                            "searchreplace visualblocks code fullscreen",
+                                            "insertdatetime media table paste code help wordcount",
+                                        ],
+                                        toolbar:
+                                            "undo redo | formatselect | bold italic backcolor | \
                             alignleft aligncenter alignright alignjustify | \
                             bullist numlist outdent indent | removeformat | help",
-                            }}
-                            onEditorChange={handleEditorChange}
-                        />
-                    ) : (
-                        <div
-                            className="prose max-w-full"
-                            dangerouslySetInnerHTML={{ __html: content }}
-                        />
-                    )}
-                </div>
-
-                {/* Signature */}
-                <div className="flex justify-end mt-6">
-                    <img src="/signature.png" alt="signature" className="w-32" />
-                </div>
-
-                {/* Footer */}
-                <div className="w-full border-t border-gray-300 opacity-50 my-6"></div>
-                <div className="flex space-x-8 text-sm text-gray-600">
-                    <div className="flex-1">
-                        <p className="font-semibold">Business Centre, Sharjah Publishing City</p>
-                        <p>Free Zone, Sharjah, United Arab Emirates</p>
-                    </div>
-                    <div className="flex-1">
-                        <p className="font-semibold">+971 58 549 2071</p>
-                        <p>hello@bigfolio.co</p>
+                                    }}
+                                    onEditorChange={handleEditorChange}
+                                />
+                            ) : (
+                                <div
+                                    className="prose max-w-full"
+                                    dangerouslySetInnerHTML={{ __html: content }}
+                                />
+                            )}
+                        </div>
+                        <div className="w-full border-t border-gray-300 opacity-50 my-6"></div>
+                        <div className="flex space-x-8 text-sm text-gray-600">
+                            <div className="flex-1">
+                                <p>Business Centre, Sharjah Publishing City</p>
+                                <p>Free Zone, Sharjah, United Arab Emirates</p>
+                            </div>
+                            <div className="flex-1">
+                                <p>+1 435-328-2694</p>
+                                <p>hello@bigfolio.co</p>
+                            </div>
+                        </div>
                     </div>
                 </div>
+
             </div>
-        </div>
         </div>
     );
 }

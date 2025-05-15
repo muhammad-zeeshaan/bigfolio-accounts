@@ -31,4 +31,8 @@ body {
 .ant-picker-calendar-date{
  border-right: 1px solid rgba(5, 5, 5, 0.06) !important;
  border-left: 1px solid rgba(5, 5, 5, 0.06) !important;
+ /* height: 100% !important; */
+}
+.ant-picker-cell{
+  /* height: 204.57px !important; */
 }
