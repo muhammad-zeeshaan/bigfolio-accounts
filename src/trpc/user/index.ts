@@ -11,7 +11,8 @@ import {
     addEmployeeDocument,
     deleteEmployeeDocument
 } from "./controller";
-import { SendInvoice, sendInvoiceEmail, SendSalarySlip } from '@/app/actions/sendPDF';
+import { generatePDFinvoice, SendInvoice, sendInvoiceEmail, SendSalarySlip } from '@/app/actions/sendPDF';
+import { z } from 'zod';
 
 const employeeRouter = router({
     fetchEmployees: publicProcedure
@@ -54,6 +55,9 @@ const employeeRouter = router({
         .mutation(async ({ input }) => {
             return sendInvoiceEmail(input.emails, input.pdfBase64, input.ccEmails);
         }),
+    generatePDFinvoice: protectedProcedure
+        .input(z.any())
+        .mutation(({ input }) => generatePDFinvoice(input)),
 });
 
 export default employeeRouter;

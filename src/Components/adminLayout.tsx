@@ -9,9 +9,19 @@ import { UserOutlined } from '@ant-design/icons';
 import { SessionUser } from '@/app/types';
 import Link from 'next/link';
 import Image from 'next/image';
-
+import enGB from 'antd/locale/en_GB';
 const { Header, Content, Footer } = Layout;
+import dayjs from 'dayjs';
+import 'dayjs/locale/en-gb';
+import updateLocale from 'dayjs/plugin/updateLocale';
 
+
+dayjs.locale('en-gb');
+
+dayjs.extend(updateLocale);
+dayjs.updateLocale('en-gb', {
+    weekStart: 1
+});
 interface LayoutProps {
     children: ReactNode;
     session?: { user?: SessionUser };
@@ -45,9 +55,9 @@ const AdminLayout: React.FC<LayoutProps> = ({ children, session }) => {
         { key: 'home', label: 'Home', href: '/' },
         { key: 'admin', label: 'Employee', href: '/admin' },
         { key: 'history', label: 'History', href: '/admin/history' },
-        { key: 'calendar', label: 'Calender', href: '/admin/calendar' },
+        { key: 'calendar', label: 'Attendance Tracker', href: '/admin/attendance-tracker' },
         { key: 'invoice', label: 'Invoice', href: '/admin/invoice' },
-        { key: 'letter', label: 'Letter', href: '/admin/letter' },
+        { key: 'letter', label: 'Letter Head', href: '/admin/letter-head' },
     ];
 
     const generateBreadcrumbs = () => {
@@ -75,7 +85,7 @@ const AdminLayout: React.FC<LayoutProps> = ({ children, session }) => {
     };
 
     return (
-        <ConfigProvider>
+        <ConfigProvider locale={enGB}>
             <Layout>
                 <Header style={{ position: 'fixed', width: '100%', zIndex: 99 }}>
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>

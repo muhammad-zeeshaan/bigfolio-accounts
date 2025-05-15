@@ -1,4 +1,5 @@
 "use client";
+
 import React, { useEffect, useState } from "react";
 import {
     Badge,
@@ -12,6 +13,9 @@ import {
     Popover,
     List,
 } from "antd";
+import dayjs from "dayjs";
+import duration from "dayjs/plugin/duration";
+dayjs.extend(duration);
 import type { Dayjs } from "dayjs";
 import { getSession } from "next-auth/react";
 import { AttendanceByDay, AttendanceRecord, SessionUser } from "@/app/types";
@@ -72,11 +76,13 @@ const CalendarComp: React.FC<CalendarCompProps> = ({ attendanceDetails }) => {
     const params = useQueryParams();
     const router = useRouter();
     const [userId, setUserId] = useState<string>("");
+    const [user, setUser] = useState<SessionUser>();
 
     useEffect(() => {
         getSession().then((session) => {
             const user: SessionUser = session?.user as SessionUser;
             setUserId(user?.id ?? "");
+            setUser(user)
         });
     }, []);
 
@@ -128,38 +134,66 @@ const CalendarComp: React.FC<CalendarCompProps> = ({ attendanceDetails }) => {
 
     const dateCellRender = (value: Dayjs) => {
         const userData = getListData(value, attendanceDetails);
-
         return userData.length > 0 ? (
             <Popover
                 content={
                     <List
                         size="small"
                         dataSource={userData}
-                        renderItem={(user) => (
-                            <List.Item>
-                                <div>
-                                    <Typography.Text strong>{user.userName}</Typography.Text>
+                        renderItem={(user) => {
+                            const checkIn = dayjs(user.checkInTime, "hh:mm A");
+                            const checkOut = user.checkOutTime !== "No Check-Out" ? dayjs(user.checkOutTime, "hh:mm A") : null;
+
+                            let totalBreakMinutes = 0;
+
+                            if (user.breaks && user.breaks.length > 0) {
+                                user.breaks.forEach((br) => {
+                                    const [start, end] = br.split(" - ");
+                                    const breakStart = dayjs(start, "hh:mm A");
+                                    const breakEnd = dayjs(end, "hh:mm A");
+                                    totalBreakMinutes += breakEnd.diff(breakStart, "minute");
+                                });
+                            }
+
+                            const totalMinutes = checkOut ? checkOut.diff(checkIn, "minute") : 0;
+                            const activeMinutes = totalMinutes - totalBreakMinutes;
+
+                            const activeDuration = dayjs.duration(activeMinutes, "minutes");
+                            const activeText = `${activeDuration.hours()} hour${activeDuration.hours() !== 1 ? "s" : ""} ${activeDuration.minutes()} minute${activeDuration.minutes() !== 1 ? "s" : ""}`;
+
+                            return (
+                                <List.Item>
                                     <div>
-                                        <Badge status="success" text={`Checked in at ${user.checkInTime}`} />
+                                        <Typography.Text strong>{user.userName}</Typography.Text>
+                                        <div>
+                                            <Badge status="success" text={`Checked in at ${user.checkInTime}`} />
+                                        </div>
+                                        {user.checkOutTime !== "No Check-Out" && (
+                                            <div>
+                                                <Badge status="warning" text={`Checked out at ${user.checkOutTime}`} />
+                                            </div>
+                                        )}
+                                        {user.breaks.length > 0 && (
+                                            <div>
+                                                <Typography.Text type="secondary">Breaks:</Typography.Text>
+                                                {user.breaks.map((br, index) => (
+                                                    <div key={index}>
+                                                        <Badge status="processing" text={br} />
+                                                    </div>
+                                                ))}
+                                            </div>
+                                        )}
+                                        {checkOut && (
+                                            <div>
+                                                <Typography.Text type='secondary'>
+                                                    Active Duration: {activeText}
+                                                </Typography.Text>
+                                            </div>
+                                        )}
                                     </div>
-                                    {user.checkOutTime !== "No Check-Out" && (
-                                        <div>
-                                            <Badge status="warning" text={`Checked out at ${user.checkOutTime}`} />
-                                        </div>
-                                    )}
-                                    {user.breaks.length > 0 && (
-                                        <div>
-                                            <Typography.Text type="secondary">Breaks:</Typography.Text>
-                                            {user.breaks.map((br, index) => (
-                                                <div key={index}>
-                                                    <Badge status="processing" text={br} />
-                                                </div>
-                                            ))}
-                                        </div>
-                                    )}
-                                </div>
-                            </List.Item>
-                        )}
+                                </List.Item>
+                            );
+                        }}
                     />
                 }
                 title="Attendance Details"
@@ -184,17 +218,15 @@ const CalendarComp: React.FC<CalendarCompProps> = ({ attendanceDetails }) => {
         params.set('month', month ?? '');
         params.update();
     };
-    
-    
 
     return (
         <Card bordered={false}>
             <Row justify="space-between" align="middle" className="mb-4">
                 <Col>
-                    <h1 className="text-xl sm:text-2xl font-bold mb-4">Track Your Attendance</h1>
+                    <h1 className="text-xl sm:text-2xl font-bold mb-4">Attendance Tracker</h1>
                 </Col>
                 <Col xs={24} sm={12} >
-                    <div className="grid grid-cols-2 gap-2 sm:flex md:justify-end sm:space-x-2">
+                    {user?.role !== "admin" && <div className="grid grid-cols-2 gap-2 sm:flex md:justify-end sm:space-x-2">
                         <Button type="primary" loading={checkInMutation.isLoading} icon={<CheckCircleOutlined />} onClick={() => checkInMutation.mutate({ userId })}>
                             Check In
                         </Button>
@@ -207,11 +239,11 @@ const CalendarComp: React.FC<CalendarCompProps> = ({ attendanceDetails }) => {
                         <Button type="primary" danger loading={checkOutMutation.isLoading} icon={<LogoutOutlined />} onClick={() => checkOutMutation.mutate({ userId })}>
                             Check Out
                         </Button>
-                    </div>
+                    </div>}
                 </Col>
             </Row>
 
-            <Calendar cellRender={dateCellRender} onPanelChange={onPanelChange}/>
+            <Calendar cellRender={dateCellRender} onPanelChange={onPanelChange} />
         </Card>
     );
 };
