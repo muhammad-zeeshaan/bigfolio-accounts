@@ -1,6 +1,5 @@
 "use server"
 import { Employee, HistoryDTOWITHOUTID } from '../types/index';
-import puppeteer from 'puppeteer';
 import { ObjectId } from "mongodb";
 import User from '@/models/User';
 import transporter from '@/utils/mailer';
@@ -10,6 +9,9 @@ import { SendInvoiceRequestType, SendSalarySlipRequest } from '../validations/us
 import InvoiceTemplate from '@/Components/InvoiceTemplate';
 import { generateInvoiceHTML } from '../lib/generateInvoiceHTML';
 import { dataImg, logoTextImg } from '../../../public/pdfImg';
+
+import puppeteer from 'puppeteer-core';
+import chromium from 'chrome-aws-lambda';
 
 async function generatePDF(html: string): Promise<Buffer> {
     const browser = await puppeteer.launch({
@@ -195,8 +197,9 @@ export async function generatePDFinvoice(input: any) {
   `;
 
     const browser = await puppeteer.launch({
-        headless: true,
-        args: ['--no-sandbox', '--disable-setuid-sandbox'],
+        args: chromium.args,
+        executablePath: await chromium.executablePath || '/usr/bin/google-chrome',
+        headless: chromium.headless,
     });
 
     const page = await browser.newPage();
@@ -209,11 +212,9 @@ export async function generatePDFinvoice(input: any) {
         headerTemplate,
         footerTemplate,
         margin: {
-            top: '100px', // Adequate space for header
-            bottom: '100px', // Adequate space for footer
-            // left: '40px',
-            // right: '40px'
-        }
+            top: '100px',
+            bottom: '100px',
+        },
     });
 
     await browser.close();
@@ -221,4 +222,5 @@ export async function generatePDFinvoice(input: any) {
     const base64PDF = Buffer.from(pdfBuffer).toString('base64');
     return { pdfBase64: base64PDF };
 }
+
 
