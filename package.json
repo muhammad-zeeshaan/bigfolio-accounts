@@ -6,7 +6,8 @@
     "dev": "node server.mjs",
     "build": "next build",
     "start": "cross-env NODE_ENV=production node server.mjs",
-    "lint": "next lint"
+    "lint": "next lint",
+    "postinstall": "puppeteer install"
   },
   "dependencies": {
     "@ant-design/icons": "^5.6.0",
