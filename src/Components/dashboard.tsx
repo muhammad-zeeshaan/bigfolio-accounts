@@ -41,10 +41,11 @@ const DashboardPage = () => {
     };
 
     return (
-        <div className="!bg-[#f5f5f5] min-h-screen">
+        <>
             <h1 className="text-2xl font-bold mb-6">Admin Dashboard</h1>
 
-            <Row gutter={[16, 16]} className="mb-6">
+            <div className='p-8 bg-gray-50'>
+                <Row gutter={[16, 16]} className="mb-6">
                 <Col xs={12} sm={12} md={6}>
                     <Card>
                         <Statistic
@@ -107,7 +108,8 @@ const DashboardPage = () => {
                     <p>⚠️ Absent marked for Alice Johnson</p>
                 </div>
             </Card>
-        </div>
+            </div>
+        </>
     );
 };
 

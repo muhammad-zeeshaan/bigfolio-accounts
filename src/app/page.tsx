@@ -9,8 +9,6 @@ export default async function page() {
     return (
         <AdminLayout session={session}>
             <AdminDashboard />
-            {/* <Invoice /> */}
         </AdminLayout>
-        // <Invoice />
     )
 }

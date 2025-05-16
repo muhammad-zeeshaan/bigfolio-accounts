@@ -5,7 +5,6 @@ import {
     Badge,
     Button,
     Calendar,
-    Card,
     message,
     Row,
     Col,
@@ -20,6 +19,7 @@ import type { Dayjs } from "dayjs";
 import { getSession } from "next-auth/react";
 import { AttendanceByDay, AttendanceRecord, SessionUser } from "@/app/types";
 import { useRouter } from "next/navigation";
+import './index.css';
 import {
     CheckCircleOutlined,
     LogoutOutlined,
@@ -220,13 +220,13 @@ const CalendarComp: React.FC<CalendarCompProps> = ({ attendanceDetails }) => {
     };
 
     return (
-        <Card bordered={false}>
-            <Row justify="space-between" align="middle" className="mb-4">
+        <div>
+            <Row justify="space-between" align="middle">
                 <Col>
-                    <h1 className="text-xl sm:text-2xl font-bold mb-4">Attendance Tracker</h1>
+                    <h1 className="text-2xl font-bold mb-6">Attendance Tracker</h1>
                 </Col>
                 <Col xs={24} sm={12} >
-                    {user?.role !== "admin" && <div className="grid grid-cols-2 gap-2 sm:flex md:justify-end sm:space-x-2">
+                    {user?.role && user?.role !== "admin" && <div className="grid grid-cols-2 gap-2 sm:flex md:justify-end sm:space-x-2">
                         <Button type="primary" loading={checkInMutation.isLoading} icon={<CheckCircleOutlined />} onClick={() => checkInMutation.mutate({ userId })}>
                             Check In
                         </Button>
@@ -243,8 +243,10 @@ const CalendarComp: React.FC<CalendarCompProps> = ({ attendanceDetails }) => {
                 </Col>
             </Row>
 
-            <Calendar cellRender={dateCellRender} onPanelChange={onPanelChange} />
-        </Card>
+            <div className='p-8 bg-gray-50'>
+                <Calendar cellRender={dateCellRender} onPanelChange={onPanelChange} />
+            </div>
+        </div>
     );
 };
 

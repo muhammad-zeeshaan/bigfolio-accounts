@@ -62,6 +62,9 @@ const AdminLayout: React.FC<LayoutProps> = ({ children, session }) => {
 
     const generateBreadcrumbs = () => {
         const pathSegments = pathname.split('/').filter(Boolean);
+        if (pathSegments.length === 0) {
+            return [{ title: <Link href={'/'}>Dashboard</Link>, key: '/' }]
+        }
         return pathSegments.map((segment, index) => {
             const url = `/${pathSegments.slice(0, index + 1).join('/')}`;
             return { title: <Link href={url}>{segment.charAt(0).toUpperCase() + segment.slice(1)}</Link>, key: url };

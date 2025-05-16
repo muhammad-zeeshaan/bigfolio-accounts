@@ -108,22 +108,19 @@ export default function Letter() {
                 </div>
             </div>
             <div className="flex justify-between items-start gap-8 p-8 bg-gray-50 min-h-screen">
-                <div className="flex flex-col bg-red-500 gap-6 w-[300px]">
-                    <div className="flex flex-col gap-4">
-                        <p className="text-sm text-gray-600">Letter Heading</p>
+                <div className="w-[350px] rounded-xl bg-white p-4 border border-gray-200 space-y-6">
+                    {/* Heading Section */}
+                    <div className="space-y-2">
+                        <label className="block text-sm text-gray-600">Letter Heading</label>
                         <Input
                             type="text"
                             value={heading}
-                            className="!w-full p-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                             onChange={(e) => setHeading(e.target.value)}
                             placeholder="Enter heading"
+                            className="!w-full"
                         />
                         {submit ? (
-                            <Button
-                                type="primary"
-                                onClick={() => setSubmit(false)}
-                                className="!w-full py-2 rounded-lg bg-blue-600 hover:bg-blue-700 text-white font-semibold"
-                            >
+                            <Button type="primary" onClick={() => setSubmit(false)} className="!w-full">
                                 Edit
                             </Button>
                         ) : (
@@ -138,26 +135,29 @@ export default function Letter() {
                         )}
                     </div>
 
-                    <div className="flex flex-col gap-4">
-                        <p className="text-sm text-gray-600">Receiver Emails (comma separated)</p>
+                    {/* Receiver Emails */}
+                    <div className="space-y-2">
+                        <label className="block text-sm text-gray-600">Receiver Emails (comma separated)</label>
                         <Input
                             placeholder="Receiver Email"
                             value={emails}
                             onChange={(e) => handleParseEmails(e.target.value)}
-                            className="!w-full p-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                            className="!w-full"
                         />
                     </div>
 
-                    <div className="flex flex-col gap-4">
-                        <p className="text-sm text-gray-600">CC Email</p>
+                    {/* CC Email */}
+                    <div className="space-y-2">
+                        <label className="block text-sm text-gray-600">CC Email</label>
                         <Input
                             placeholder="CC Email"
                             value={ccEmail}
                             onChange={(e) => setCCEmail(e.target.value)}
-                            className="!w-full p-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                            className="!w-full"
                         />
                     </div>
                 </div>
+
 
                 <div className='w-full flex justify-center'>
                     <div id="invoice" className="w-[782px] bg-white p-8 rounded-[8px] border border-gray-200">
@@ -213,7 +213,7 @@ export default function Letter() {
                             )}
                         </div>
                         <div className="w-full border-t border-gray-300 opacity-50 my-6"></div>
-                        <div className="flex space-x-8 text-sm text-gray-600">
+                        <div className="flex space-x-8 text-sm">
                             <div className="flex-1">
                                 <p>Business Centre, Sharjah Publishing City</p>
                                 <p>Free Zone, Sharjah, United Arab Emirates</p>
